@@ -5,14 +5,16 @@ import re
 import collections
 import sys
 import datetime
+from field_from_mid import init_mid_to_bib_paths, extract_field
 
+mid_to_bib_paths = init_mid_to_bib_paths()
 
 material_folder = "/home/kilian/Documents/db_master/material/material/"
 citation_folder = "/home/kilian/Dropbox/db_master/material/marc/"
 
 clusters = collections.defaultdict(set)
 
-do_clusters = False
+do_clusters = True
 hide_unrelated = True
 max_cluster_depth = 2
 
@@ -39,7 +41,7 @@ if do_clusters:
                 #     clusters[clustername].add(mid)
 
 
-print(clusters)
+#print(clusters)
 #sys.exit(1)
 
 record_regex = re.compile("/record/([0-9]*)")
@@ -81,10 +83,13 @@ dot_txt = ""
 
 dot_txt += """digraph g {
               graph [label="Sources Network as of %s %s", fontsize=100];
-              node[fontsize=50, fontcolor="red", fontname=Courier, shape=box];
+              node[fontsize=10, fontcolor="black", fontname=Arial, shape=box];
+              //ratio="1:1";
+              //node[fontsize=50, fontcolor="red", fontname=Courier, shape=box];
               ratio="fill";
               //size="11.692,8.267"; 
-              size="16.53,11.69";
+              //size="16.53,11.69"; //a3
+              //size="33.06,11.69"
               \n""" % (str(datetime.date.today()), str(datetime.datetime.now().time()))
 
 for dot_connection in my_dot_connections:
@@ -104,7 +109,7 @@ for cluster, items in clusters.items():
     #dot_txt += '\tstyle="filled";'
     for item in items:
         if item in my_dots or not hide_unrelated:
-            dot_txt += '\t\t"{}";\n'.format(item)
+            dot_txt += '\t\t"{}" [label="{}"];\n'.format(item, extract_field(mid_to_bib_paths[item], "title"))
     dot_txt += "\t}\n"
 
 dot_txt += "}"
