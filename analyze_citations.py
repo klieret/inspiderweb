@@ -6,11 +6,21 @@ import collections
 import sys
 import datetime
 from field_from_mid import init_mid_to_bib_paths, extract_field
+import logging
+
+logger = logging.getLogger("inspirespider")
+logger.setLevel(logging.DEBUG)
+sh = logging.StreamHandler()
+sh.setLevel(logging.DEBUG)
+fm = logging.Formatter("%(levelname)s: %(message)s")
+sh.setFormatter(fm)
+logger.addHandler(sh)
+logger.addHandler(sh)
 
 mid_to_bib_paths = init_mid_to_bib_paths()
 
-material_folder = "/home/kilian/Documents/db_master/material/material/"
-citation_folder = "/home/kilian/Dropbox/db_master/material/marc/"
+material_folder = os.path.expanduser("~/Dropbox/db_master/material/material/")
+citation_folder = os.path.expanduser("~/Dropbox/db_master/material/marc/")
 
 clusters = collections.defaultdict(set)
 
@@ -58,9 +68,12 @@ class Record(object):
         #     self.label = self.inspire_url.split('/')[-1]
 
 
-def parse_records(string):
+# http://i.imgur.com/gOPS2.png
+record_regex = re.compile("/record/([0-9]*)")
+def extract_records(string):
     # goes fro string, looking for every record url
-    pass
+    records = record_regex.findall(string)
+    return records
 
 def get_cited_by(record):
     pass
@@ -68,36 +81,44 @@ def get_cited_by(record):
 def get_references(record):
     pass
 
-record_regex = re.compile("/record/([0-9]*)")
-
-dot_connections = []
-hep_to_mref = {}
+logger.debug("Started going files.")
+connections = set()
+#hep_to_mref = {}
 for filename in os.listdir(citation_folder):
     with open(os.path.join(citation_folder, filename), "r") as citefile:
-        this_record = None
-        for line in citefile:
-            if not line:
-                continue
-            if record_regex.search(line):
-                record = record_regex.search(line).group(1)
-                if not this_record:
-                    this_record = record
-                    mid = os.path.splitext(os.path.basename(filename))[0]
-                    hep_to_mref[this_record] = mid
-                if not this_record == record:
-                    dot_connections.append((this_record, record))
+        records = extract_records(citefile.read())
+        this_record = records[0]  # fixme: this is a hack; we should know this form before
+        mid = os.path.splitext(os.path.basename(filename))[0] # fixme: not done properly either
+        #hep_to_mref[this_record] = mid
+        these_connections = set([(this_record, record) for record in records if
+                           not this_record == record])
+        connections.update(these_connections)
+        # this_record = None
+        # for line in citefile:
+        #     if not line:
+        #         continue
+        #     if record_regex.search(line):
+        #         record = record_regex.search(line).group(1)
+        #         if not this_record:
+        #             this_record = record
+        #             mid = os.path.splitext(os.path.basename(filename))[0]
+        #             hep_to_mref[this_record] = mid
+        #         if not this_record == record:
+        #             dot_connections.append((this_record, record))
 
-my_dots = set()
-for dot_connection in dot_connections:
-    my_dots.add(hep_to_mref[dot_connection[0]])
+logger.debug("Finished doing so")
 
-my_dot_connections = []
-for dot_connection in dot_connections:
-    if not dot_connection[1] in hep_to_mref:
-        continue
-    if hep_to_mref[dot_connection[1]] in my_dots:
-        my_dot_connections.append((hep_to_mref[dot_connection[0]],
-                                   hep_to_mref[dot_connection[1]]))
+#my_dots = set()
+#for dot_connection in dot_connections:
+#    my_dots.add(hep_to_mref[dot_connection[0]])
+
+#my_dot_connections = []
+# for dot_connection in dot_connections:
+#     if not dot_connection[1] in hep_to_mref:
+#         continue
+#     if hep_to_mref[dot_connection[1]] in my_dots:
+#         my_dot_connections.append((hep_to_mref[dot_connection[0]],
+#                                    hep_to_mref[dot_connection[1]]))
 
 
 class DotGraph(object):
@@ -106,7 +127,7 @@ class DotGraph(object):
 
     def start_digraph(self):
         self.dot_str += \
-            ("digraph g {\n"
+            ("digraph g {{\n"
              "\tgraph [label=\"Network as of {date} {time}\", fontsize=100];\n"
              "\tnode[fontsize=10, fontcolor=black, fontname=Arial, shape=box];\n"
              "//\tratio=\"1:1\";\n"
@@ -139,7 +160,7 @@ dg = DotGraph()
 
 dg.start_digraph()
 
-for dot_connection in my_dot_connections:
+for dot_connection in connections:
     dg.add_connection(dot_connection[0], dot_connection[1])
 
 
