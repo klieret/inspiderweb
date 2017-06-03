@@ -225,19 +225,18 @@ db.statistics()
 #db.autocomplete_records()
 
 db.save()
-sys.exit(0)
 
-keys = [item[0] for item in connections]
-allowed_items = keys
+# keys = [item[0] for item in connections]
+# allowed_items = keys
 
 # Limit ourselfs to a certain subset of possible papers
 # Filter connections
 # another possiblilty would to just not add them from before,
 # which might improve performance but is less flexible to use
-filtered_connections = set([connection for connection in connections
-                            if connection[0] in allowed_items and
-                            connection[1] in allowed_items])
-logger.debug("After filtering, I have {} connections.".format(len(filtered_connections)))
+# filtered_connections = set([connection for connection in connections
+#                             if connection[0] in allowed_items and
+#                             connection[1] in allowed_items])
+# logger.debug("After filtering, I have {} connections.".format(len(filtered_connections)))
 
 #my_dots = set()
 #for dot_connection in dot_connections:
@@ -254,43 +253,52 @@ logger.debug("After filtering, I have {} connections.".format(len(filtered_conne
 
 class DotGraph(object):
     def __init__(self):
-        self.dot_str = ""
+        self._dot_str = ""
+        self._records = {}
+        self._connections = set([])
 
-    def start_digraph(self, style=""):
-        self.dot_str += "digraph g {\n"
-        indented = ";\n".join(['\t' + line for line in style.split(';')
-                               if line])
-        self.dot_str += indented
+    # def _add_cluster(self, records, style=""):
+    #     # for cluster, items in clusters.items():
+    #     self._dot_str += '\tsubgraph "cluster_{}" {{\n'.format(cluster)
+    #     self._dot_str += ("\tfontname=Courier;\n"
+    #                      "\tfontcolor=red;\n"
+    #                      "\tpenwidth=3;\n"
+    #                      "\tfontsize=50;\n"
+    #                      "\tcolor=\"red\";\n"
+    #                      "\tstyle=\"filled\";\n"
+    #                      "\tfillcolor=\"gray97\";\n")
+    #     self._dot_str += '\tlabel="{}";\n'.format(cluster)
+    #     for record in records:
+    #         self._dot_str += '\t\t"{}" [label="{}"];\n'.format(
+    #             record.id, record.label)
+    #     self._dot_str += "\t}\n"
 
-    def end_digraph(self):
-        self.dot_str += "}"
+    def add_connection(self, from_record, to_record):
+        self._records[from_record.mid] = from_record
+        self._records[to_record.mid] = to_record
+        self._connections.add((from_record.mid, to_record.mid))
 
-    def add_cluster(self, records, style=""):
-        # for cluster, items in clusters.items():
-        self.dot_str += '\tsubgraph "cluster_{}" {{\n'.format(cluster)
-        self.dot_str += ("\tfontname=Courier;\n"
-                         "\tfontcolor=red;\n"
-                         "\tpenwidth=3;\n"
-                         "\tfontsize=50;\n"
-                         "\tcolor=\"red\";\n"
-                         "\tstyle=\"filled\";\n"
-                         "\tfillcolor=\"gray97\";\n")
-        self.dot_str += '\tlabel="{}";\n'.format(cluster)
-        for record in records:
-            self.dot_str += '\t\t"{}" [label="{}"];\n'.format(
-                record.id, record.label)
-        self.dot_str += "\t}\n"
-
-    def add_connection(self, start, end):
-        self.dot_str += '\t"{}" -> "{}"; \n'.format(dot_connection[0],
-                                                    dot_connection[1])
 
     def return_dot_str(self):
-        return self.dot_str
+        return self._dot_str
+
+    def generate_dot_str(self, style=""):
+        self._dot_str = ""
+        self._dot_str += "digraph g {\n"
+        indented = ";\n".join(['\t' + line for line in style.split(';')
+                               if line])
+        self._dot_str += indented
+
+        for connection in self._connections:
+            self._dot_str += '\t"{}" -> "{}"; \n'.format(connection[0],
+                                                         connection[1])
+
+        self._dot_str += "}"
+        return self._dot_str
 
     def write_to_file(self, filename):
         with open(filename, "w") as dotfile:
-            dotfile.write(self.dot_str)
+            dotfile.write(self._dot_str)
 
 dg = DotGraph()
 
@@ -309,13 +317,12 @@ style = graph_style + node_style + size
 #      "\n".format(date=str(datetime.date.today()),
 #                       time=str(datetime.datetime.now().time()))
 
-dg.start_digraph(style)
 
-for dot_connection in filtered_connections:
-    dg.add_connection(dot_connection[0], dot_connection[1])
+for mid, record in db._records.items():
+    for citation in record.citations:
+        dg.add_connection(record, db.get_record(citation))
 
-dg.end_digraph()
-
+dg.generate_dot_str(style)
 dg.write_to_file("dotfile.dot")
 
 
