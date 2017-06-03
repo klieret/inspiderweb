@@ -65,6 +65,7 @@ class Record(object):
     def __init__(self, inspire_url, label=None):
         self.inspire_url = inspire_url
         self.label = label
+        self.bibkey = ""
         self.id = self.inspire_url.split('/')[-1]
         # if label:
         #     self.label = label
@@ -73,14 +74,21 @@ class Record(object):
         self.references = []
         self.citations = []
 
+    def get_info(self):
+        logger.debug("Downloading bibfile of {}".format(self.id))
+        bib_entry = urllib.request.urlopen(
+            self.inspire_url + "/export/hx").read().decode("utf-8")
+        bibkey = bibkey_regex.search(bib_entry).group(1)
+        self.bibkey = bibkey
+
     def get_citations(self):
         logger.debug("Downloading citations of {}".format(self.id))
-        reference_html = urllib.request.urlopen(
+        citations_html = urllib.request.urlopen(
             self.inspire_url + "/citations").read().decode("utf-8")
-        records = record_regex.findall(reference_html)
+        records = record_regex.findall(citations_html)
         records = [record for record in records if not record == self.id]
         logger.debug("{} is cited by {} records".format(self.id, len(records)))
-        self.references = records
+        self.citations = records
 
     def get_references(self):
         logger.debug("Downloading references of {}".format(self.id))
@@ -94,14 +102,16 @@ class Record(object):
 
 # http://i.imgur.com/gOPS2.png
 record_regex = re.compile("/record/([0-9]*)")
+bibkey_regex = re.compile(r"@\w*\{([^,]*),")
+
 # def extract_records(string):
 #     # goes fro string, looking for every record url
 #     records = record_regex.findall(string)
 #     return records
 
 r = Record("http://inspirehep.net/record/566620")
-r.get_citations()
-print(r.citations)
+r.get_info()
+print(r.bibkey)
 sys.exit(1)
 
 logger.debug("Started going files.")
