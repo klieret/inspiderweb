@@ -20,6 +20,8 @@ sh.setFormatter(fm)
 logger.addHandler(sh)
 logger.addHandler(sh)
 
+# fixme: Where do the Double Arrows come from?
+# fixme: Use API instead of parsing. But I don't see where there is a clear link to cited documents....
 
 clusters = collections.defaultdict(set)
 
@@ -145,13 +147,14 @@ class Record(object):
         #     self.label = self.inspire_url.split('/')[-1]
         self.references = []
         self.citations = []
+        self.cocitations = []
 
     @property
     def label(self):
-        if self._label:
-            return self._label
         if self.bibkey:
             return self.bibkey
+        if self._label:
+            return self._label
         return self.inspire_url.split("/")[-1]
 
     @label.setter
@@ -195,11 +198,21 @@ class Record(object):
         record_regex = re.compile("/record/([0-9]*)")
         logger.debug("Downloading citations of {}".format(self.mid))
         citations_html = urllib.request.urlopen(
-            self.inspire_url + "/citations").read().decode("utf-8")
-        records = record_regex.findall(citations_html)
-        records = [record for record in records if not record == self.mid]
-        logger.debug("{} is cited by {} records".format(self.mid, len(records)))
-        self.citations = records
+            self.inspire_url + "/citations").readlines()
+        citations = []
+        cocitations = []
+        cocitations_started = False
+        for line in citations_html:
+            if "Co-cited with" in line:
+                cocitations_started = True
+            if not cocitations_started:
+                citations += record_regex.findall(line)
+            else:
+                cocitations += record_regex.findall(line)
+        citations = [record for record in citations if not record == self.mid]
+        logger.debug("{} is cited by {} records".format(self.mid, len(citations)))
+        self.citations = citations
+        self.cocitations = cocitations
         return True
 
     def get_references(self, force=False):
@@ -229,6 +242,8 @@ db.load()
 db.statistics()
 #db.load_records_from_urls("insire_urls_example.txt")
 #db.autocomplete_records(save_every=1)
+
+#sys.exit(0)
 
 db.save()
 
@@ -313,11 +328,11 @@ class DotGraph(object):
 dg = DotGraph()
 
 graph_style = \
-    "graph [label=\"Network as of {date} {time}\", fontsize=100];".format(
+    "graph [label=\"inspiderweb {date} {time}\", fontsize=40];".format(
         date=str(datetime.date.today()),
         time=str(datetime.datetime.now().time()))
-node_style = "node[fontsize=10, fontcolor=black, fontname=Arial, shape=box];"
-size = ""
+node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, shape=box];"
+size = 'size="14,10";'
 style = graph_style + node_style + size
 # "//ratio=\"1:1\";\n"
 #      "//ratio=\"fill\";\n"
@@ -330,10 +345,12 @@ style = graph_style + node_style + size
 
 for mid, record in db._records.items():
     if not record.is_complete():
-        print("not complete")
         continue
     for citation in record.citations:
-        dg.add_connection(record, db.get_record(citation))
+        citation_record = db.get_record(citation)
+        if not citation_record.is_complete():
+            continue
+        dg.add_connection(record, citation_record)
 
 dg.generate_dot_str(style)
 dg.write_to_file("dotfile.dot")
