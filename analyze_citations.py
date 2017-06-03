@@ -7,6 +7,8 @@ import sys
 import datetime
 from field_from_mid import init_mid_to_bib_paths, extract_field
 import logging
+import pickle
+import urllib.request
 
 logger = logging.getLogger("inspirespider")
 logger.setLevel(logging.DEBUG)
@@ -59,6 +61,7 @@ seeds = []  # initial papers I'm interested in
 
 
 class Record(object):
+    # fixme: Maybe initialize with id instead
     def __init__(self, inspire_url, label=None):
         self.inspire_url = inspire_url
         self.label = label
@@ -67,20 +70,39 @@ class Record(object):
         #     self.label = label
         # else:
         #     self.label = self.inspire_url.split('/')[-1]
+        self.references = []
+        self.citations = []
+
+    def get_citations(self):
+        logger.debug("Downloading citations of {}".format(self.id))
+        reference_html = urllib.request.urlopen(
+            self.inspire_url + "/citations").read().decode("utf-8")
+        records = record_regex.findall(reference_html)
+        records = [record for record in records if not record == self.id]
+        logger.debug("{} is cited by {} records".format(self.id, len(records)))
+        self.references = records
+
+    def get_references(self):
+        logger.debug("Downloading references of {}".format(self.id))
+        reference_html = urllib.request.urlopen(
+            self.inspire_url + "/references").read().decode("utf-8")
+        records = record_regex.findall(reference_html)
+        records = [record for record in records if not record == self.id]
+        logger.debug("{} is citing {} records".format(self.id, len(records)))
+        self.references = records
 
 
 # http://i.imgur.com/gOPS2.png
 record_regex = re.compile("/record/([0-9]*)")
-def extract_records(string):
-    # goes fro string, looking for every record url
-    records = record_regex.findall(string)
-    return records
+# def extract_records(string):
+#     # goes fro string, looking for every record url
+#     records = record_regex.findall(string)
+#     return records
 
-def get_cited_by(record):
-    pass
-
-def get_references(record):
-    pass
+r = Record("http://inspirehep.net/record/566620")
+r.get_citations()
+print(r.citations)
+sys.exit(1)
 
 logger.debug("Started going files.")
 connections = set()
