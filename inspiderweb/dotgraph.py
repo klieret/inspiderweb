@@ -3,10 +3,12 @@ import logging
 logger = logging.getLogger("inspirespider")
 
 class DotGraph(object):
-    def __init__(self):
+    def __init__(self, db):
+        self.db = db
         self._dot_str = ""
-        self._records = {}
-        self._connections = set([])
+        self.node_styles = {}
+        self.connections = set([])
+        self.style = ""
 
     # def _add_cluster(self, records, style=""):
     #     # for cluster, items in clusters.items():
@@ -24,27 +26,36 @@ class DotGraph(object):
     #             record.id, record.label)
     #     self._dot_str += "\t}\n"
 
-    def add_connection(self, from_record, to_record):
-        self._records[from_record.mid] = from_record
-        self._records[to_record.mid] = to_record
-        self._connections.add((from_record.mid, to_record.mid))
+    def add_node(self, mid, style=""):
+        self.node_styles[mid] = style
 
+    def add_connection(self, from_id, to_id):
+        self.connections.add((from_id, to_id))
 
     def return_dot_str(self):
         return self._dot_str
 
-    def generate_dot_str(self, style=""):
+    def generate_dot_str(self):
         self._dot_str = ""
         self._dot_str += "digraph g {\n"
-        indented = ";\n".join(['\t' + line for line in style.split(';')
+        indented = ";\n".join(['\t' + line for line in self.style.split(';')
                                if line])
         self._dot_str += indented
 
-        for mid, record in self._records.items():
-            self._dot_str += '\t "{}" [label="{}"];\n'.format(record.mid,
-                                                          record.label)
+        for connection in self.connections:
+            from_id = connection[0]
+            to_id = connection[1]
+            if not from_id in self.node_styles or not self.node_styles[from_id]:
+                self.node_styles[from_id] = 'label="{}"'.format(
+                    self.db.get_record(from_id).label)
+            if not to_id in self.node_styles or not self.node_styles[to_id]:
+                self.node_styles[from_id] = 'label="{}"'.format(
+                    self.db.get_record(to_id).label)
 
-        for connection in self._connections:
+        for mid, style in self.node_styles.items():
+            self._dot_str += '\t"{}" [{}];\n'.format(mid, style)
+
+        for connection in self.connections:
             self._dot_str += '\t"{}" -> "{}"; \n'.format(connection[0],
                                                          connection[1])
 

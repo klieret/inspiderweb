@@ -33,14 +33,14 @@ db.save()
 
 
 
-dg = DotGraph()
+dg = DotGraph(db)
 
 graph_style = \
     "graph [label=\"inspiderweb {date} {time}\", fontsize=40];".format(
         date=str(datetime.date.today()),
         time=str(datetime.datetime.now().time()))
 node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, shape=box];"
-size = 'size="14,10";'
+size = ''#''size="14,10";'
 style = graph_style + node_style + size
 # "//ratio=\"1:1\";\n"
 #      "//ratio=\"fill\";\n"
@@ -48,22 +48,25 @@ style = graph_style + node_style + size
 #      "//size=\"16.53,11.69\"; //a3\n"
 #      "//size=\"33.06,11.69\"\n"
 
+valid_source_id = lambda mid: db.get_record(mid).is_complete()
+valid_target_id = lambda mid: db.get_record(mid).is_complete()
 
 for mid, record in db._records.items():
-    if not record.is_complete():
-        continue
-    for reference in record.references:
-        reference_record = db.get_record(reference)
-        if not reference_record.is_complete():
+    for reference_id in record.references:
+        if not valid_target_id(reference_id):
             continue
-        dg.add_connection(record, reference_record)
-    for citation in record.citations:
-        citation_record = db.get_record(citation)
-        if not citation_record.is_complete():
+        if not valid_source_id(mid):
             continue
-        dg.add_connection(citation_record, record)
+        dg.add_connection(record.mid, reference_id)
+    for citation_id in record.citations:
+        if valid_source_id(citation_id):
+            continue
+        if valid_source_id(mid):
+            continue
+        dg.add_connection(citation_id, record.mid)
 
-dg.generate_dot_str(style)
+
+dg.generate_dot_str()
 dg.write_to_file("dotfile.dot")
 
 
