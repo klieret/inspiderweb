@@ -5,10 +5,10 @@ import re
 import collections
 import sys
 import datetime
-from field_from_mid import init_mid_to_bib_paths, extract_field
 import logging
 import pickle
 import urllib.request
+import csv
 
 logger = logging.getLogger("inspirespider")
 logger.setLevel(logging.DEBUG)
@@ -19,10 +19,6 @@ sh.setFormatter(fm)
 logger.addHandler(sh)
 logger.addHandler(sh)
 
-mid_to_bib_paths = init_mid_to_bib_paths()
-
-material_folder = os.path.expanduser("~/Dropbox/db_master/material/material/")
-citation_folder = os.path.expanduser("~/Dropbox/db_master/material/marc/")
 
 clusters = collections.defaultdict(set)
 
@@ -145,6 +141,11 @@ class Record(object):
         self.references = records
         return True
 
+    def __str__(self):
+        return "R({})".format(self.mid)
+
+    def __repr__(self):
+        return self.__str__()
 
 # http://i.imgur.com/gOPS2.png
 
@@ -157,14 +158,30 @@ db = Database("pickle.pickle")
 
 db.load()
 
-r = db.get_record("566620")
-r.get_info()
-r.get_references()
-r.get_citations()
+with open("inspirehep_links.txt", "r") as inspire_links:
+    csv = csv.reader(inspire_links, delimiter=";")
+    for row in csv:
+        if not row:
+            continue
+        if row[0].startswith("#"):
+            continue
+        if not len(row) == 2:
+            continue
+        label = row[0].strip()
+        if not label:
+            continue
+        try:
+            mid = re.search("[0-9]+", row[1].strip()).group(0)
+        except AttributeError:
+            continue
+        r = db.get_record(mid)
+        r.label = label
+        db.update_record(mid, r)
 
-db.update_record("566620", r)
 
 db.save()
+
+print(db._records)
 
 sys.exit(1)
 
@@ -195,6 +212,8 @@ for filename in os.listdir(citation_folder):
 
 logger.debug("Finished doing so")
 logger.debug("Added a total of {} connections.".format(len(connections)))
+
+db.save()
 
 keys = [item[0] for item in connections]
 allowed_items = keys
