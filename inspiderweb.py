@@ -130,7 +130,7 @@ class Database(object):
 class Record(object):
     def __init__(self, mid, label=None):
         self.inspire_url = "http://inspirehep.net/record/{}".format(mid)
-        self.label = label
+        self._label = label
         self.bibkey = ""
         self.mid = mid
         # if label:
@@ -139,6 +139,21 @@ class Record(object):
         #     self.label = self.inspire_url.split('/')[-1]
         self.references = []
         self.citations = []
+
+    @property
+    def label(self):
+        if self._label:
+            return self._label
+        if self.bibkey:
+            return self.bibkey
+        return self.inspire_url.split("/")[-1]
+
+    @label.setter
+    def label(self, label):
+        self._label = label
+
+    def is_complete(self):
+        return self.bibkey and self.references and self.citations
 
     def autocomplete(self, force=False):
         reloaded = self.get_info(force=force)
@@ -206,7 +221,7 @@ db = Database("pickle.pickle")
 
 db.load()
 db.statistics()
-#db.load_records_from_urls("inspirehep_links.txt")
+#db.load_records_from_urls("insire_urls_example.txt")
 #db.autocomplete_records()
 
 db.save()
