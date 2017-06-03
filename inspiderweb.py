@@ -63,6 +63,11 @@ class Database(object):
 
     def statistics(self):
         logger.info("Current number of records: {}".format(len(self._records)))
+        # print(self._records.keys())
+        # for mid, r in self._records.items():
+        #     print(r.mid, r.is_complete())
+        logger.info("Current number of completed records: {}".format(
+            sum([int(r.is_complete()) for mid, r in self._records.items()])))
 
     def load(self, path=""):
         if not path:
@@ -87,6 +92,7 @@ class Database(object):
             if i % save_every == 0:
                 self.save()
             record.autocomplete(force=force)
+            self.update_record(mid, record)
 
     def get_record(self, mid):
         if mid in self._records:
@@ -153,7 +159,7 @@ class Record(object):
         self._label = label
 
     def is_complete(self):
-        return self.bibkey and self.references and self.citations
+        return bool(self.bibkey and self.references and self.citations)
 
     def autocomplete(self, force=False):
         reloaded = self.get_info(force=force)
@@ -222,7 +228,7 @@ db = Database("pickle.pickle")
 db.load()
 db.statistics()
 #db.load_records_from_urls("insire_urls_example.txt")
-#db.autocomplete_records()
+#db.autocomplete_records(save_every=1)
 
 db.save()
 
@@ -289,6 +295,10 @@ class DotGraph(object):
                                if line])
         self._dot_str += indented
 
+        for mid, record in self._records.items():
+            self._dot_str += '\t "{}" [label="{}"];\n'.format(record.mid,
+                                                          record.label)
+
         for connection in self._connections:
             self._dot_str += '\t"{}" -> "{}"; \n'.format(connection[0],
                                                          connection[1])
@@ -319,6 +329,9 @@ style = graph_style + node_style + size
 
 
 for mid, record in db._records.items():
+    if not record.is_complete():
+        print("not complete")
+        continue
     for citation in record.citations:
         dg.add_connection(record, db.get_record(citation))
 
