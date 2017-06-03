@@ -3,3 +3,4 @@
 *.pickle
 insire_urls_example.txt
 .idea/**
+*.png
