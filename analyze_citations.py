@@ -62,6 +62,7 @@ class Record(object):
     def __init__(self, inspire_url, label=None):
         self.inspire_url = inspire_url
         self.label = label
+        self.id = self.inspire_url.split('/')[-1]
         # if label:
         #     self.label = label
         # else:
@@ -107,6 +108,19 @@ for filename in os.listdir(citation_folder):
         #             dot_connections.append((this_record, record))
 
 logger.debug("Finished doing so")
+logger.debug("Added a total of {} connections.".format(len(connections)))
+
+keys = [item[0] for item in connections]
+allowed_items = keys
+
+# Limit ourselfs to a certain subset of possible papers
+# Filter connections
+# another possiblilty would to just not add them from before,
+# which might improve performance but is less flexible to use
+filtered_connections = set([connection for connection in connections
+                            if connection[0] in allowed_items and
+                            connection[1] in allowed_items])
+logger.debug("After filtering, I have {} connections.".format(len(filtered_connections)))
 
 #my_dots = set()
 #for dot_connection in dot_connections:
@@ -125,25 +139,30 @@ class DotGraph(object):
     def __init__(self):
         self.dot_str = ""
 
-    def start_digraph(self):
-        self.dot_str += \
-            ("digraph g {{\n"
-             "\tgraph [label=\"Network as of {date} {time}\", fontsize=100];\n"
-             "\tnode[fontsize=10, fontcolor=black, fontname=Arial, shape=box];\n"
-             "//\tratio=\"1:1\";\n"
-             "//\tnode[fontsize=50, fontcolor=\"red\", fontname=Courier, shape=box];\n"
-             "//\tratio=\"fill\";\n"
-             "//\tsize=\"11.692,8.267\"; \n"
-             "//\tsize=\"16.53,11.69\"; //a3\n"
-             "//\tsize=\"33.06,11.69\"\n"
-             "\n").format(date=str(datetime.date.today()),
-                          time=str(datetime.datetime.now().time()))
+    def start_digraph(self, style=""):
+        self.dot_str += "digraph g {\n"
+        indented = ";\n".join(['\t' + line for line in style.split(';')
+                               if line])
+        self.dot_str += indented
 
     def end_digraph(self):
         self.dot_str += "}"
 
-    def add_cluster(self):
-        raise NotImplemented
+    def add_cluster(self, records, style=""):
+        # for cluster, items in clusters.items():
+        self.dot_str += '\tsubgraph "cluster_{}" {{\n'.format(cluster)
+        self.dot_str += ("\tfontname=Courier;\n"
+                         "\tfontcolor=red;\n"
+                         "\tpenwidth=3;\n"
+                         "\tfontsize=50;\n"
+                         "\tcolor=\"red\";\n"
+                         "\tstyle=\"filled\";\n"
+                         "\tfillcolor=\"gray97\";\n")
+        self.dot_str += '\tlabel="{}";\n'.format(cluster)
+        for record in records:
+            self.dot_str += '\t\t"{}" [label="{}"];\n'.format(
+                record.id, record.label)
+        self.dot_str += "\t}\n"
 
     def add_connection(self, start, end):
         self.dot_str += '\t"{}" -> "{}"; \n'.format(dot_connection[0],
@@ -158,33 +177,31 @@ class DotGraph(object):
 
 dg = DotGraph()
 
-dg.start_digraph()
+graph_style = \
+    "graph [label=\"Network as of {date} {time}\", fontsize=100];".format(
+        date=str(datetime.date.today()),
+        time=str(datetime.datetime.now().time()))
+node_style = "node[fontsize=10, fontcolor=black, fontname=Arial, shape=box];"
+size = ""
+style = graph_style + node_style + size
+# "//ratio=\"1:1\";\n"
+#      "//ratio=\"fill\";\n"
+#      "//size=\"11.692,8.267\"; \n"
+#      "//size=\"16.53,11.69\"; //a3\n"
+#      "//size=\"33.06,11.69\"\n"
+#      "\n".format(date=str(datetime.date.today()),
+#                       time=str(datetime.datetime.now().time()))
 
-for dot_connection in connections:
+dg.start_digraph(style)
+
+for dot_connection in filtered_connections:
     dg.add_connection(dot_connection[0], dot_connection[1])
 
-
-
 dg.end_digraph()
+
 dg.write_to_file("dotfile.dot")
 
-# for cluster, items in clusters.items():
-#     dot_txt += '\tsubgraph "cluster_{}" {{\n'.format(cluster)
-#     dot_txt += """\tfontname=Courier;
-#     \tfontcolor=red;
-#     \tpenwidth=3;
-#     \tfontsize=50;
-#     \tcolor="red";
-#     \tstyle="filled";
-#     \tfillcolor="gray97";
-#     """
-#     dot_txt += '\tlabel="{}";\n'.format(cluster)
-#     #dot_txt += '\tstyle="filled";'
-#     for item in items:
-#         if item in my_dots or not hide_unrelated:
-#             dot_txt += '\t\t"{}" [label="{}"];\n'.format(item, extract_field(mid_to_bib_paths[item], "title"))
-#     dot_txt += "\t}\n"
-# dot_txt += "}"
+
 
 
 
