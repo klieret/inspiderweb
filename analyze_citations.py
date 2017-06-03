@@ -9,6 +9,7 @@ import logging
 import pickle
 import urllib.request
 import csv
+import time
 
 logger = logging.getLogger("inspirespider")
 logger.setLevel(logging.DEBUG)
@@ -60,6 +61,9 @@ class Database(object):
         self._records = {}
         self.backup_path = backup_path
 
+    def statistics(self):
+        logger.info("Current number of records: {}".format(len(self._records)))
+
     def load(self, path=""):
         if not path:
             path = self.backup_path
@@ -76,6 +80,13 @@ class Database(object):
         pickle.dump(self._records, open(path, "wb"))
         logger.debug("Successfully saved db to {}".format(path))
 
+    def autocomplete_records(self, force=False, save_every=10):
+        i = 0
+        for mid, record in self._records.items():
+            i += 1
+            if i % save_every == 0:
+                self.save()
+            record.autocomplete(force=force)
 
     def get_record(self, mid):
         if mid in self._records:
@@ -85,6 +96,35 @@ class Database(object):
 
     def update_record(self, mid, record):
         self._records[mid] = record
+
+    def load_records_from_urls(self,
+                               path: str,
+                               delimiter_char=";",
+                               comment_char="#",
+                               label_column=0,
+                               id_column=1):
+        logger.info("Adding records from {}".format(path))
+        with open(path, "r") as inspire_links:
+            csv_file = csv.reader(inspire_links, delimiter=delimiter_char)
+            for row in csv_file:
+                if not row:
+                    continue
+                if row[0].startswith(comment_char):
+                    continue
+                try:
+                    label = row[label_column].strip()
+                except KeyError:
+                    continue
+
+                try:
+                    mid = re.search("[0-9]+", row[id_column].strip()).group(0)
+                except AttributeError or KeyError:
+                    continue
+
+                r = db.get_record(mid)
+                r.label = label
+                self.update_record(mid, r)
+        logger.debug("Finished adding records.")
 
 
 class Record(object):
@@ -99,6 +139,20 @@ class Record(object):
         #     self.label = self.inspire_url.split('/')[-1]
         self.references = []
         self.citations = []
+
+    def autocomplete(self, force=False):
+        reloaded = self.get_info(force=force)
+        if reloaded:
+            time.sleep(1)
+            logger.debug("Sleeping for 1 second.")
+        reloaded = self.get_citations(force=force)
+        if reloaded:
+            time.sleep(1)
+            logger.debug("Sleeping for 1 second.")
+        reloaded = self.get_references(force=force)
+        if reloaded:
+            time.sleep(1)
+            logger.debug("Sleeping for 1 second.")
 
     def get_info(self, force=False):
         if self.bibkey and not force:
@@ -147,73 +201,16 @@ class Record(object):
     def __repr__(self):
         return self.__str__()
 
-# http://i.imgur.com/gOPS2.png
-
-# def extract_records(string):
-#     # goes fro string, looking for every record url
-#     _records = record_regex.findall(string)
-#     return _records
-
 db = Database("pickle.pickle")
 
+
 db.load()
-
-with open("inspirehep_links.txt", "r") as inspire_links:
-    csv = csv.reader(inspire_links, delimiter=";")
-    for row in csv:
-        if not row:
-            continue
-        if row[0].startswith("#"):
-            continue
-        if not len(row) == 2:
-            continue
-        label = row[0].strip()
-        if not label:
-            continue
-        try:
-            mid = re.search("[0-9]+", row[1].strip()).group(0)
-        except AttributeError:
-            continue
-        r = db.get_record(mid)
-        r.label = label
-        db.update_record(mid, r)
-
+db.statistics()
+#db.load_records_from_urls("inspirehep_links.txt")
+#db.autocomplete_records()
 
 db.save()
-
-print(db._records)
-
-sys.exit(1)
-
-logger.debug("Started going files.")
-connections = set()
-#hep_to_mref = {}
-for filename in os.listdir(citation_folder):
-    with open(os.path.join(citation_folder, filename), "r") as citefile:
-        records = extract_records(citefile.read())
-        this_record = records[0]  # fixme: this is a hack; we should know this form before
-        mid = os.path.splitext(os.path.basename(filename))[0] # fixme: not done properly either
-        #hep_to_mref[this_record] = mid
-        these_connections = set([(this_record, record) for record in records if
-                           not this_record == record])
-        connections.update(these_connections)
-        # this_record = None
-        # for line in citefile:
-        #     if not line:
-        #         continue
-        #     if record_regex.search(line):
-        #         record = record_regex.search(line).group(1)
-        #         if not this_record:
-        #             this_record = record
-        #             mid = os.path.splitext(os.path.basename(filename))[0]
-        #             hep_to_mref[this_record] = mid
-        #         if not this_record == record:
-        #             dot_connections.append((this_record, record))
-
-logger.debug("Finished doing so")
-logger.debug("Added a total of {} connections.".format(len(connections)))
-
-db.save()
+sys.exit(0)
 
 keys = [item[0] for item in connections]
 allowed_items = keys
