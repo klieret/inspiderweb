@@ -59,14 +59,44 @@ seeds = []  # initial papers I'm interested in
 #print(clusters)
 #sys.exit(1)
 
+class Database(object):
+    def __init__(self, backup_path):
+        self._records = {}
+        self.backup_path = backup_path
+
+    def load(self, path=""):
+        if not path:
+            path = self.backup_path
+        if not os.path.exists(path):
+            logger.warning("Could not load db from file.")
+            return False
+        self._records = pickle.load(open(path, "rb"))
+        logger.debug("Successfully loaded db from {}".format(path))
+        return True
+
+    def save(self, path=""):
+        if not path:
+            path = self.backup_path
+        pickle.dump(self._records, open(path, "wb"))
+        logger.debug("Successfully saved db to {}".format(path))
+
+
+    def get_record(self, mid):
+        if mid in self._records:
+            return self._records[mid]
+        else:
+            return Record(mid)
+
+    def update_record(self, mid, record):
+        self._records[mid] = record
+
 
 class Record(object):
-    # fixme: Maybe initialize with id instead
-    def __init__(self, inspire_url, label=None):
-        self.inspire_url = inspire_url
+    def __init__(self, mid, label=None):
+        self.inspire_url = "http://inspirehep.net/record/{}".format(mid)
         self.label = label
         self.bibkey = ""
-        self.id = self.inspire_url.split('/')[-1]
+        self.mid = mid
         # if label:
         #     self.label = label
         # else:
@@ -74,44 +104,68 @@ class Record(object):
         self.references = []
         self.citations = []
 
-    def get_info(self):
-        logger.debug("Downloading bibfile of {}".format(self.id))
+    def get_info(self, force=False):
+        if self.bibkey and not force:
+            logger.debug("Skipping downloading of info.")
+            return False
+        bibkey_regex = re.compile(r"@\w*\{([^,]*),")
+        logger.debug("Downloading bibfile of {}".format(self.mid))
         bib_entry = urllib.request.urlopen(
             self.inspire_url + "/export/hx").read().decode("utf-8")
         bibkey = bibkey_regex.search(bib_entry).group(1)
+        logger.debug("Bibkey of {} is {}".format(self.mid, bibkey))
         self.bibkey = bibkey
+        return True
 
-    def get_citations(self):
-        logger.debug("Downloading citations of {}".format(self.id))
+    def get_citations(self, force=False):
+        if self.citations and not force:
+            logger.debug("Skipping downloading of citations.")
+            return False
+        record_regex = re.compile("/record/([0-9]*)")
+        logger.debug("Downloading citations of {}".format(self.mid))
         citations_html = urllib.request.urlopen(
             self.inspire_url + "/citations").read().decode("utf-8")
         records = record_regex.findall(citations_html)
-        records = [record for record in records if not record == self.id]
-        logger.debug("{} is cited by {} records".format(self.id, len(records)))
+        records = [record for record in records if not record == self.mid]
+        logger.debug("{} is cited by {} records".format(self.mid, len(records)))
         self.citations = records
+        return True
 
-    def get_references(self):
-        logger.debug("Downloading references of {}".format(self.id))
+    def get_references(self, force=False):
+        if self.references and not force:
+            logger.debug("Skipping downloading of references.")
+            return False
+        record_regex = re.compile("/record/([0-9]*)")
+        logger.debug("Downloading references of {}".format(self.mid))
         reference_html = urllib.request.urlopen(
             self.inspire_url + "/references").read().decode("utf-8")
         records = record_regex.findall(reference_html)
-        records = [record for record in records if not record == self.id]
-        logger.debug("{} is citing {} records".format(self.id, len(records)))
+        records = [record for record in records if not record == self.mid]
+        logger.debug("{} is citing {} records".format(self.mid, len(records)))
         self.references = records
+        return True
 
 
 # http://i.imgur.com/gOPS2.png
-record_regex = re.compile("/record/([0-9]*)")
-bibkey_regex = re.compile(r"@\w*\{([^,]*),")
 
 # def extract_records(string):
 #     # goes fro string, looking for every record url
-#     records = record_regex.findall(string)
-#     return records
+#     _records = record_regex.findall(string)
+#     return _records
 
-r = Record("http://inspirehep.net/record/566620")
+db = Database("pickle.pickle")
+
+db.load()
+
+r = db.get_record("566620")
 r.get_info()
-print(r.bibkey)
+r.get_references()
+r.get_citations()
+
+db.update_record("566620", r)
+
+db.save()
+
 sys.exit(1)
 
 logger.debug("Started going files.")
