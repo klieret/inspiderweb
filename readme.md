@@ -9,12 +9,14 @@ This is a tool to analyze networks papers referencing and citing each other. It 
 
 ## Screenshots
 
-Small network of some 15 nodes, sorted by year (plotted with ```dot```):
-![by year](_small_by_year.png)
-Plotting a small network of 17 nodes with ```dot```:
-![dot](_small_dot.png)
-Plotting a small network of 17 nodes with ```fdp```:
-![fdp](_small_fdp.png)
+![opening picture](https://github.com/klieret/readme-files/blob/master/inspiderweb/opening.jpg)
+
+<!--Small network of some 15 nodes, sorted by year (plotted with ```dot```):-->
+<!--![by year](_small_by_year.png)-->
+<!--Plotting a small network of 17 nodes with ```dot```:-->
+<!--![dot](_small_dot.png)-->
+<!--Plotting a small network of 17 nodes with ```fdp```:-->
+<!--![fdp](_small_fdp.png)-->
 
 
 ## How does it work?
@@ -232,7 +234,7 @@ Now we are ready to use ```dot``` to plot this! The most basic command for ```.p
 
 which gives us the following picture: 
 
-![tutorial first picture](tutorial.png)
+![tutorial first picture](https://github.com/klieret/readme-files/blob/master/inspiderweb/tutorial.png)
 
 To get ```.pdf``` output with clickable nodes, we cannot use ```-Tpdf``` however, but instead first have to generate a ```.ps``` which we then convert via the ```ps2pdf``` utility:
 
@@ -241,3 +243,5 @@ To get ```.pdf``` output with clickable nodes, we cannot use ```-Tpdf``` however
 To get the graph sorted by years, simply supply the ```--rank year``` option. Doing all of this in one line (connecting different commands with ```&&```):
 
     ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o build/test.dot && dot -Tps2 build/test.dot > build/test.ps && ps2pdf build/test.ps build/test.pdf 
+
+![tutorial year picture](https://github.com/klieret/readme-files/blob/master/inspiderweb/tutorial_year.png)
