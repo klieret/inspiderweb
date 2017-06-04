@@ -4,6 +4,7 @@ from .record import Record
 import csv
 import os.path
 import re
+import time
 
 logger = logging.getLogger("inspirespider")
 
@@ -42,6 +43,9 @@ class Database(object):
             i += 1
             if i % save_every == 0:
                 self.save()
+            if i % 5 == 0:
+                time.sleep(5)
+                logger.debug("Sleeping a bit longer.")
             record.autocomplete(force=force)
             self.update_record(mid, record)
 
