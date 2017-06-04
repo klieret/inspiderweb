@@ -62,11 +62,11 @@ class Record(object):
         self.bibkey = ""
         self.mid = mid
         self.references_dl = False
-        self.references = []
+        self.references = set([])
         self.citations_dl = False
-        self.citations = []
+        self.citations = set([])
         self.cocitations_dl = False
-        self.cocitations = []
+        self.cocitations = set([])
 
     # fixme: Rather separate that from self._label so that we can combine bibkey and label
     @property
@@ -144,8 +144,8 @@ class Record(object):
         logger.debug("{} is cited by {} records".format(self.mid, len(citations)))
         logger.debug("{} is co-cited with {} records".format(self.mid, len(cocitations)))
 
-        self.citations = citations
-        self.cocitations = cocitations
+        self.citations.update(citations)
+        self.cocitations.update(cocitations)
         self.citations_dl = True
         self.cocitations_dl = True
         return True
@@ -165,7 +165,7 @@ class Record(object):
         records = record_regex.findall(reference_html)
         records = [record for record in records if not record == self.mid]
         logger.debug("{} is citing {} records".format(self.mid, len(records)))
-        self.references = records
+        self.references.update(ecords)
         self.references_dl = True
         return True
 
