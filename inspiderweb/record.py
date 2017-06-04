@@ -1,9 +1,47 @@
 import logging
 import time
 import urllib.request
+import socket
 import re
 
 logger = logging.getLogger("inspirespider")
+
+
+def download(url: str, retries=3, timeout=5, sleep_after=3,
+             raise_exception=False) -> str:
+    """ Download from url with automatic retries
+    :param url: Url to download.
+    :param retries: Number of possible retries.
+    :param timeout: Abort downloading after $timeout s.
+    :param sleep_after: Time [s] to sleep after each attempt.
+    :param raise_exception: Raise Exception if download fails after retries.
+    :return: Downloaded and decoded web page.
+    """
+    socket.setdefaulttimeout(timeout)
+    string = ""
+    for attempt in range(retries):
+        logger.debug("Downloading from {}.".format(url))
+        try:
+            string = urllib.request.urlopen(url).read().decode("utf-8")
+        except Exception:
+            logger.warning("Download of {} failed. Sleeping for {}s"
+                           "before maybe retrying.".format(url, sleep_after))
+            time.sleep(sleep_after)
+            continue
+
+        logger.debug("Download successfull. Sleeping for {}s.".format(
+            sleep_after))
+        time.sleep(sleep_after)
+        break
+
+    if string:
+        return string
+
+    if raise_exception:
+        raise TimeoutError
+
+    return ""
+
 
 class Record(object):
     def __init__(self, mid, label=None):
@@ -58,8 +96,7 @@ class Record(object):
             return False
         bibkey_regex = re.compile(r"@\w*\{([^,]*),")
         logger.debug("Downloading bibfile of {}".format(self.mid))
-        bib_entry = urllib.request.urlopen(
-            self.inspire_url + "/export/hx").read().decode("utf-8")
+        bib_entry = download(self.inspire_url + "/export/hx")
         bibkey = bibkey_regex.search(bib_entry).group(1)
         logger.debug("Bibkey of {} is {}".format(self.mid, bibkey))
         self.bibkey = bibkey
@@ -71,10 +108,11 @@ class Record(object):
             return False
         record_regex = re.compile("/record/([0-9]*)")
         logger.debug("Downloading citations of {}".format(self.mid))
-        citations_html = urllib.request.urlopen(self.inspire_url + "/citations").read().decode("utf-8")
+        citations_html = download(self.inspire_url + "/citations")
         # logger.debug("decode success")
         citations = []
         cocitations = []
+        # fixme: Parsing should definitely be improved
         cocitations_started = False
         for i, line in enumerate(citations_html.split('\n')):
             # print(i, line )
@@ -101,8 +139,7 @@ class Record(object):
             return False
         record_regex = re.compile("/record/([0-9]*)")
         logger.debug("Downloading references of {}".format(self.mid))
-        reference_html = urllib.request.urlopen(
-            self.inspire_url + "/references").read().decode("utf-8")
+        reference_html = download(self.inspire_url + "/references")
         records = record_regex.findall(reference_html)
         records = [record for record in records if not record == self.mid]
         logger.debug("{} is citing {} records".format(self.mid, len(records)))
