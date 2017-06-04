@@ -60,7 +60,8 @@ misc_options.add_argument("-h", "--help",
                           help="Print help message", action="help")
 misc_options.add_argument("--rank", required=False,
                           help="Rank by [year]", default="",
-                          type=str)
+                          type=str,
+                          choices=["year"])
 misc_options.add_argument("--maxseeds", required=False, type=int,
                           help="Maximum number of seeds (for testing "
                                "purposes).",

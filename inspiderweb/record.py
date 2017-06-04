@@ -1,10 +1,9 @@
-import logging
 import time
 import urllib.request
 import socket
 import re
+from .log import logger
 
-logger = logging.getLogger("inspirespider")
 
 def download(url: str, retries=3, timeout=10, sleep_after=3,
              raise_exception=False) -> str:

@@ -1,12 +1,11 @@
-import logging
 import pickle
 from .record import Record
 import csv
 import os.path
 import re
 import time
+from .log import logger
 
-logger = logging.getLogger("inspirespider")
 
 class Database(object):
     def __init__(self, backup_path):

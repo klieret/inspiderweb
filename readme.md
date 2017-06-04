@@ -34,6 +34,7 @@ This info is then used to generate an output in the [dot language](https://en.wi
 
 ## Limitations/Bugs
 
+* I didn't do too many tests and there's maybe more todo notes in the code than features itself, so don't expect everything to work right away!
 * I did not find an API for inspirehep that can offer all of the above pieces of information, so right now the script actually [downloads the html pages and parses them via regular expressions](http://i.imgur.com/gOPS2.png). Very elegant indeed! Any work on this would be very appreciated! 
 * This also means that the script is quite slow at the moment, as three pages have to be downloaded (one for the bibtex file, one for the references and one for the citations). The script waits a few seconds after each download as to not strain the inspirehep capacities, so just let in run in the background for a couple of hours and it should be done. 
 * The html pages of some papers which are cited by a 1000 others (or reference a similar great number of other papers) will be provided by inspirehep very slowly which can cause the script to skip the download entry (as it believes that the resource can't be reached). This can be somewhat tweaked by setting the ```timeout``` (right now in ```records.py```) to a bigger value.
@@ -42,13 +43,21 @@ This info is then used to generate an output in the [dot language](https://en.wi
 
 ## Installation
 
-1. Clone this archive VIA, or download it as a ```.zip``` from HERE. It only uses the standard python libraries, so there should be no need install any other packages. 
+1. Clone this archive via 
+        
+        git clone https://github.com/klieret/inspiderweb
+    
+    or download the current version as a ```.zip``` by clicking [here](https://github.com/klieret/inspiderweb/archive/master.zip). It only uses the standard python libraries, so there should be no need install any other packages. 
 
 2. Install graphviz. On most Linux systems this should already be in the repository, so
 
         sudo apt-get install graphviz
 
     or similar should do the job.
+    
+3. If you need to generate pdfs with clickable hyperlinks, you need the ```ps2pdf``` utility. E.g. run
+
+        sudo apt-get install ps2pdf
 
 ## Usage
 

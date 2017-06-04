@@ -1,7 +1,6 @@
-import logging
 import re
 import collections
-logger = logging.getLogger("inspirespider")
+from .log import logger
 
 class DotGraph(object):
     def __init__(self, db):
