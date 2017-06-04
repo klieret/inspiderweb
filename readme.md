@@ -1,6 +1,6 @@
 # InspiderNet
 
-This is a tool to analyze networks papers referencing and citing each other. It acts as a web-crawler, extracting information from [inspirehep](http://inspirehep.net/), then uses the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language) to describe the network. The result can then be plotted by [Graphviz Package](http://www.graphviz.org/) and similar programs.
+This is a tool to analyze networks papers referencing and citing each other. It acts as a web-crawler, extracting information from [inspirehep](http://inspirehep.net/), then uses the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language) to describe the network. The result can then be plotted by the [Graphviz Package](http://www.graphviz.org/) and similar programs.
 
 ## Features
 
@@ -10,11 +10,11 @@ This is a tool to analyze networks papers referencing and citing each other. It 
 ## Screenshots
 
 Small network of some 15 nodes, sorted by year (plotted with ```dot```):
-![by year](small_by_year.png)
+![by year](_small_by_year.png)
 Plotting a small network of 17 nodes with ```dot```:
-![dot](small_dot.png)
+![dot](_small_dot.png)
 Plotting a small network of 17 nodes with ```fdp```:
-![fdp](small_fdp.png)
+![fdp](_small_fdp.png)
 
 
 ## How does it work?
@@ -48,7 +48,7 @@ This info is then used to generate an output in the [dot language](https://en.wi
 
 ## Usage
 
-There are usually several steps involved.
+There are usually several steps involved. See *Tutorial* below for some easy examples.
 
 1. Run the python script to crawl over an initial set of papers (seeds); let the script extract references and/or citations (as well as the bibkeys). This information will be saved, so that we do not have to redownload it again (unless we want to update).
 2. Download the remaining bibkeys (or general bibliographic info) of the referenced/cited papers.  This information will be saved, so that we do not have to redownload it again (unless we want to update).
@@ -60,6 +60,52 @@ The ```graphviz``` package provides several nice tools that can be used.
 * ```dot```: For "Hierarchical" graphcs: ```dot -Tpdf dotfile.dot > dotfile.pdf``` (to generate pdf output) 
 * ```fdp```: For "Spring models": ```dfp -Tpdf dotfile.dot > dotfile.pdf``` (to generate pdf output) 
 * ```sfdp```: Like ```fdp``` but scales better with bigger networks: ```dfp -Tpdf dotfile.dot > dotfile.pdf``` (to generate pdf output)
+
+All command line options are described in the help message: Run ```python3 inspiderweb.py --help``` to get:
+```
+usage: inspiderweb.py -d DATABASE [-o OUTPUT] [-s SEEDS] [-p] [-u UPDATESEEDS]
+                      [-t UPDATEDB] [-h] [--rank RANK] [--maxseeds MAXSEEDS]
+                      [--forceupdate]
+
+    INSPIDERWEB
+ `.,-'\_____/`-.,'     Tool to analyze networks papers referencing and citing each
+  /`..'\ _ /`.,'\      other. It acts as a web-crawler, extracting information from
+ /  /`.,' `.,'\  \     inspirehep, then uses the dot languageto describe the
+/__/__/     \__\__\__  network. The result can then be plotted by the graphviz
+\  \  \     /  /  /    Package and similar programs.
+ \  \,'`._,'`./  /     More info on the github page.
+  \,'`./___\,'`./
+ ,'`-./_____\,-'`.
+     /       \
+    
+
+Setup/Configure Options:
+  Supply in/output paths...
+
+  -d DATABASE, --database DATABASE
+                        Required: Pickle database file.
+  -o OUTPUT, --output OUTPUT
+                        Output dot file.
+  -s SEEDS, --seeds SEEDS
+                        Input seed file.
+
+Action Options:
+  What do you want to do?
+
+  -p, --plot            Generate dot output (i.e. plot).
+  -u UPDATESEEDS, --updateseeds UPDATESEEDS
+                        Update seeds with the following information: '[bib],[cites],[refs]'
+  -t UPDATEDB, --updatedb UPDATEDB
+                        Update db with the following information: '[bib],[cites],[refs]'
+
+Misc:
+  Misc Options
+
+  -h, --help            Print help message
+  --rank RANK           Rank by [year]
+  --maxseeds MAXSEEDS   Maximum number of seeds (for testing purposes).
+  --forceupdate         For all information that we get from the database: Force redownload
+```
 
 ## The Dot Output
 
@@ -97,3 +143,5 @@ digraph g {
 	"1322383" -> "1125962"; 
 }
 ```
+
+Sometimes it's easier to add style properties etc. just here in the output file before using ```graphiviz```.
