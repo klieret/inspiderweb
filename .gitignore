@@ -1,9 +1,3 @@
-*.dot
-*.pdf
-*.pickle
-inspire_urls_example.txt
 .idea/**
-*.png
 __pycache__/**
 inspiderweb/__pycache__/**
-*.ps
