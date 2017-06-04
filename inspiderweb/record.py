@@ -88,7 +88,8 @@ class Record(object):
         if not self._label:
             self._label = other.label
 
-    # fixme: Rather separate that from self._label so that we can combine bibkey and label
+    # fixme: Rather separate that from self._label so that we can combine ...
+    # bibkey and label
     @property
     def label(self):
         if self.bibkey:
@@ -175,8 +176,10 @@ class Record(object):
             else:
                 cocitations += record_regex.findall(line)
         citations = [record for record in citations if not record == self.mid]
-        logger.debug("{} is cited by {} records".format(self.mid, len(citations)))
-        logger.debug("{} is co-cited with {} records".format(self.mid, len(cocitations)))
+        logger.debug("{} is cited by {} records".format(
+            self.mid, len(citations)))
+        logger.debug("{} is co-cited with {} records".format(
+            self.mid, len(cocitations)))
 
         self.citations.update(citations)
         self.cocitations.update(cocitations)

@@ -28,7 +28,7 @@ class DotGraph(object):
     def add_node(self, mid, style=""):
         self._node_styles[mid] = style
 
-    def add_connection(self, from_mid: str, to_mid:str) -> None:
+    def add_connection(self, from_mid: str, to_mid: str) -> None:
         """ Adds connection between two nodes.
 
         Args:
@@ -42,12 +42,12 @@ class DotGraph(object):
 
         Args:
             mids: Set (!) of mids for each member of the cluster
-            cluster_id: An id for the cluster. Must be unique, but otherwise arbitrary.
+            cluster_id: Id for cluster. Must be unique, otherwise arbitrary.
             style: String to style the cluster
         """
         self._clusters[cluster_id] = (mids, style)
 
-    def add_cluster_node(self, cluster_id: str, mid:str):
+    def add_cluster_node(self, cluster_id: str, mid: str):
         self._clusters[cluster_id][0].add(mid)
 
     def return_dot_str(self) -> str:
@@ -85,12 +85,15 @@ class DotGraph(object):
                 node_ids_by_year[year].add(node_id)
 
             # fixme: style shouldn't be defined here
-            self._dot_str += "\t{\n\t\tnode [shape=circle, fontsize=20, style=filled, color=yellow];\n"
-            self._dot_str += "\t\t" + "->".join(list(sorted(node_ids_by_year.keys(), reverse=True))) + ";\n"
+            self._dot_str += "\t{\n\t\tnode [shape=circle, fontsize=20, " \
+                             "style=filled, color=yellow];\n"
+            self._dot_str += "\t\t" + "->".join(
+                list(sorted(node_ids_by_year.keys(), reverse=True))) + ";\n"
             self._dot_str += "\t}\n"
 
             for year, node_ids in node_ids_by_year.items():
-                self._dot_str += "\t{{rank=same; {}; {} }}\n".format(year, "; ".join(node_ids))
+                self._dot_str += "\t{{rank=same; {}; {} }}\n".format(
+                    year, "; ".join(node_ids))
 
         else:
             logger.warning("Unknown rank option {}".format(rank))
@@ -121,7 +124,8 @@ class DotGraph(object):
         """
 
         for node_id in self._all_node_ids:
-            if node_id not in self._node_styles or not self._node_styles[node_id]:
+            if node_id not in self._node_styles or not \
+                    self._node_styles[node_id]:
                 self._node_styles[node_id] = 'label="{}" URL="{}"'.format(
                     self.db.get_record(node_id).label,
                     self.db.get_record(node_id).inspire_url)

@@ -17,8 +17,8 @@ some methods to update/save/cache information.
 
 class Database(object):
     """  The Database mostly is a collection of
-    Record objects (that hold information of a record/paper from inspirehep) plus
-    some methods to update/save/cache information.
+    Record objects (that hold information of a record/paper from inspirehep)
+    plus some methods to update/save/cache information.
     The records are collected in self._records, a dictionary of the form
     mid: record, where record is a Record object and mid is the inspirehep
     id, i.e. the number 566620 for the record inspirehep.net/record/566620/.
