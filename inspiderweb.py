@@ -5,6 +5,7 @@ import datetime
 import logging
 from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
+import sys
 
 logger = logging.getLogger("inspirespider")
 logger.setLevel(logging.DEBUG)
@@ -24,14 +25,39 @@ db = Database("pickle.pickle")
 
 db.load()
 db.statistics()
-#db.load_records_from_urls("insire_urls_example.txt")
+#db.load_records_from_urls("inspire_urls_example.txt")
 #db.autocomplete_records()
 
 #sys.exit(0)
 
 db.save()
 
+seeds = []
+with open("seed_ids_small.txt", "r") as seedfile:
+    for line in seedfile:
+        line = line.replace('\n', "")
+        line = line.strip()
+        if not line:
+            continue
+        seeds.append(line)
 
+for seed in seeds:
+    record = db.get_record(seed)
+    for citation in record.references:
+        # print(citation, citation in db._records)
+        r = db.get_record(citation)
+        db.update_record(r.mid, r)
+        # print(citation, citation in db._records)
+
+
+# db.statistics()
+# print(db.statistics())
+
+db.autocomplete_records()
+
+sys.exit(0)
+
+print("seeds", seeds)
 
 dg = DotGraph(db)
 
@@ -40,16 +66,17 @@ graph_style = \
         date=str(datetime.date.today()),
         time=str(datetime.datetime.now().time()))
 node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, shape=box];"
-size = ''#''size="14,10";'
+size = 'size="30,30"; ration="fill"'#''size="14,10";'
 style = graph_style + node_style + size
+dg.style = style
 # "//ratio=\"1:1\";\n"
 #      "//ratio=\"fill\";\n"
 #      "//size=\"11.692,8.267\"; \n"
 #      "//size=\"16.53,11.69\"; //a3\n"
 #      "//size=\"33.06,11.69\"\n"
 
-valid_source_id = lambda mid: db.get_record(mid).is_complete()
-valid_target_id = lambda mid: db.get_record(mid).is_complete()
+valid_source_id = lambda mid: db.get_record(mid).is_complete() and mid in seeds
+valid_target_id = lambda mid: db.get_record(mid).is_complete() and mid in seeds
 
 for mid, record in db._records.items():
     for reference_id in record.references:
@@ -59,11 +86,15 @@ for mid, record in db._records.items():
             continue
         dg.add_connection(record.mid, reference_id)
     for citation_id in record.citations:
-        if valid_source_id(citation_id):
+        if not valid_source_id(citation_id):
             continue
-        if valid_source_id(mid):
+        if not valid_target_id(mid):
             continue
         dg.add_connection(citation_id, record.mid)
+
+# for mid in seeds:
+#      dg.add_node(mid, 'label="{}",color="cadetblue",style="filled"'.format(
+#          db.get_record(mid).label))
 
 
 dg.generate_dot_str()
