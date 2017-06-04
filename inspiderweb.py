@@ -7,12 +7,13 @@ from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
 import sys
 
+# todo: Use API instead of parsing. But I don't see where there is a clear link to cited documents....
+
 # todo: add docstrings
 # todo: separate in several scripts, that download information or plot the graph
 # todo: add argparse interface
 # todo: maybe use a proper format to save the record data or at least allow to export into such
 # todo: add clusters
-# todo: make clickable
 # todo: extract more infomration; add title as tooltip
 
 logger = logging.getLogger("inspirespider")
@@ -24,7 +25,6 @@ sh.setFormatter(fm)
 logger.addHandler(sh)
 logger.addHandler(sh)
 
-# fixme: Use API instead of parsing. But I don't see where there is a clear link to cited documents....
 
 clusters = collections.defaultdict(set)
 
@@ -121,36 +121,9 @@ for mid, record in db._records.items():
         all_node_ids.add(citation_id)
 
 import collections
-node_ids_by_year = collections.defaultdict(set)
-import re
-year_regex = re.compile(r".*:([0-9]{4}).*")
-
-for node_id in all_node_ids:
-    bibkey = db.get_record(node_id).bibkey
-    try:
-        year = year_regex.match(bibkey).group(1)
-    except:
-        continue
-    print(node_id, bibkey, year)
-    node_ids_by_year[year].add(node_id)
 
 
-
-string = "\t{\n \tnode [shape=circle, fontsize=16, style=filled, color=yellow];"
-
-string += "->".join(list(sorted(node_ids_by_year.keys(), reverse=True)))
-string += "}\n"
-
-for year, node_ids in node_ids_by_year.items():
-    string += "\t {{rank=same; {}; {} }}\n".format(year, "; ".join(node_ids))
-dg.rank_specs += string
-
-# for mid in seeds:
-#      dg.add_node(mid, 'label="{}",color="cadetblue",style="filled"'.format(
-#          db.get_record(mid).label))
-
-
-dg.generate_dot_str()
+dg.generate_dot_str(rank="year")
 dg.write_to_file("dotfile.dot")
 
 

@@ -1,14 +1,15 @@
 import logging
-
+import re
+import collections
 logger = logging.getLogger("inspirespider")
 
 class DotGraph(object):
     def __init__(self, db):
         self.db = db
         self._dot_str = ""
+        self.all_node_ids = set([])
         self.node_styles = {}
         self.connections = set([])
-        self.rank_specs = ""
         self.style = ""
 
     # def _add_cluster(self, records, style=""):
@@ -36,27 +37,46 @@ class DotGraph(object):
     def return_dot_str(self):
         return self._dot_str
 
-    def generate_dot_str(self):
+    def generate_dot_str(self, rank=""):
         self._dot_str = ""
         self._dot_str += "digraph g {\n"
         indented = ";\n".join(['\t' + line for line in self.style.split(';')
                                if line])
         self._dot_str += indented
 
-        self._dot_str += self.rank_specs
-
 
         for connection in self.connections:
-            from_id = connection[0]
-            to_id = connection[1]
-            if not from_id in self.node_styles or not self.node_styles[from_id]:
-                self.node_styles[from_id] = 'label="{}" URL="{}"'.format(
-                    self.db.get_record(from_id).label,
-                    self.db.get_record(from_id).inspire_url)
-            if not to_id in self.node_styles or not self.node_styles[to_id]:
-                self.node_styles[to_id] = 'label="{}" URL="{}"'.format(
-                    self.db.get_record(to_id).label,
-                    self.db.get_record(to_id).inspire_url)
+            self.all_node_ids.add(connection[0])
+            self.all_node_ids.add(connection[1])
+
+        if rank == "":
+            pass
+        elif rank == "year":
+            year_regex = re.compile(r".*:([0-9]{4}).*")
+            node_ids_by_year = collections.defaultdict(set)
+            for node_id in self.all_node_ids:
+                bibkey = self.db.get_record(node_id).bibkey
+                try:
+                    year = year_regex.match(bibkey).group(1)
+                except:
+                    continue
+                node_ids_by_year[year].add(node_id)
+
+            self._dot_str += "\t{\n\t\tnode [shape=circle, fontsize=16, style=filled, color=yellow];\n"
+            self._dot_str += "\t\t" + "->".join(list(sorted(node_ids_by_year.keys(), reverse=True))) + ";\n"
+            self._dot_str += "\t}\n"
+
+            for year, node_ids in node_ids_by_year.items():
+                self._dot_str += "\t{{rank=same; {}; {} }}\n".format(year, "; ".join(node_ids))
+
+        else:
+            logger.warning("Unknown rank option {}".format(rank))
+
+        for node_id in self.all_node_ids:
+            if node_id not in self.node_styles or not self.node_styles[node_id]:
+                self.node_styles[node_id] = 'label="{}" URL="{}"'.format(
+                    self.db.get_record(node_id).label,
+                    self.db.get_record(node_id).inspire_url)
 
         for mid, style in self.node_styles.items():
             self._dot_str += '\t"{}" [{}];\n'.format(mid, style)
