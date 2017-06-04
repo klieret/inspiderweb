@@ -8,6 +8,7 @@ class DotGraph(object):
         self._dot_str = ""
         self.node_styles = {}
         self.connections = set([])
+        self.rank_specs = ""
         self.style = ""
 
     # def _add_cluster(self, records, style=""):
@@ -42,6 +43,9 @@ class DotGraph(object):
                                if line])
         self._dot_str += indented
 
+        self._dot_str += self.rank_specs
+
+
         for connection in self.connections:
             from_id = connection[0]
             to_id = connection[1]
@@ -49,11 +53,12 @@ class DotGraph(object):
                 self.node_styles[from_id] = 'label="{}"'.format(
                     self.db.get_record(from_id).label)
             if not to_id in self.node_styles or not self.node_styles[to_id]:
-                self.node_styles[from_id] = 'label="{}"'.format(
+                self.node_styles[to_id] = 'label="{}"'.format(
                     self.db.get_record(to_id).label)
 
         for mid, style in self.node_styles.items():
             self._dot_str += '\t"{}" [{}];\n'.format(mid, style)
+
 
         for connection in self.connections:
             self._dot_str += '\t"{}" -> "{}"; \n'.format(connection[0],
