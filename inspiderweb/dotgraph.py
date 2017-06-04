@@ -7,10 +7,10 @@ class DotGraph(object):
     def __init__(self, db):
         self.db = db
         self._dot_str = ""
-        self.all_node_ids = set([])
-        self.node_styles = {}
-        self.connections = set([])
-        self.style = ""
+        self._all_node_ids = set([])
+        self._node_styles = {}
+        self._connections = set([])
+        self._style = ""
 
     # def _add_cluster(self, records, style=""):
     #     # for cluster, items in clusters.items():
@@ -29,10 +29,10 @@ class DotGraph(object):
     #     self._dot_str += "\t}\n"
 
     def add_node(self, mid, style=""):
-        self.node_styles[mid] = style
+        self._node_styles[mid] = style
 
     def add_connection(self, from_id, to_id):
-        self.connections.add((from_id, to_id))
+        self._connections.add((from_id, to_id))
 
     def return_dot_str(self):
         return self._dot_str
@@ -40,21 +40,21 @@ class DotGraph(object):
     def generate_dot_str(self, rank=""):
         self._dot_str = ""
         self._dot_str += "digraph g {\n"
-        indented = ";\n".join(['\t' + line for line in self.style.split(';')
+        indented = ";\n".join(['\t' + line for line in self._style.split(';')
                                if line])
         self._dot_str += indented
 
 
-        for connection in self.connections:
-            self.all_node_ids.add(connection[0])
-            self.all_node_ids.add(connection[1])
+        for connection in self._connections:
+            self._all_node_ids.add(connection[0])
+            self._all_node_ids.add(connection[1])
 
         if rank == "":
             pass
         elif rank == "year":
             year_regex = re.compile(r".*:([0-9]{4}).*")
             node_ids_by_year = collections.defaultdict(set)
-            for node_id in self.all_node_ids:
+            for node_id in self._all_node_ids:
                 bibkey = self.db.get_record(node_id).bibkey
                 try:
                     year = year_regex.match(bibkey).group(1)
@@ -72,17 +72,17 @@ class DotGraph(object):
         else:
             logger.warning("Unknown rank option {}".format(rank))
 
-        for node_id in self.all_node_ids:
-            if node_id not in self.node_styles or not self.node_styles[node_id]:
-                self.node_styles[node_id] = 'label="{}" URL="{}"'.format(
+        for node_id in self._all_node_ids:
+            if node_id not in self._node_styles or not self._node_styles[node_id]:
+                self._node_styles[node_id] = 'label="{}" URL="{}"'.format(
                     self.db.get_record(node_id).label,
                     self.db.get_record(node_id).inspire_url)
 
-        for mid, style in self.node_styles.items():
+        for mid, style in self._node_styles.items():
             self._dot_str += '\t"{}" [{}];\n'.format(mid, style)
 
 
-        for connection in self.connections:
+        for connection in self._connections:
             self._dot_str += '\t"{}" -> "{}"; \n'.format(connection[0],
                                                          connection[1])
 
