@@ -15,8 +15,11 @@ class Record(object):
         #     self.label = label
         # else:
         #     self.label = self.inspire_url.split('/')[-1]
+        self.references_dl = False
         self.references = []
+        self.citations_dl = False
         self.citations = []
+        self.cocitations_dl = False
         self.cocitations = []
 
     @property
@@ -32,21 +35,22 @@ class Record(object):
         self._label = label
 
     def is_complete(self):
-        return bool(self.bibkey and self.references and self.citations)
+        return bool(self.bibkey and self.references_dl and self.citations_dl
+                    and self.cocitations_dl)
 
     def autocomplete(self, force=False):
         reloaded = self.get_info(force=force)
         if reloaded:
-            time.sleep(1)
-            logger.debug("Sleeping for 1 second.")
+            logger.debug("Sleeping for a bit.")
+            time.sleep(1.5)
         reloaded = self.get_citations(force=force)
         if reloaded:
-            time.sleep(1)
-            logger.debug("Sleeping for 1 second.")
+            logger.debug("Sleeping for a bit.")
+            time.sleep(1.5)
         reloaded = self.get_references(force=force)
         if reloaded:
-            time.sleep(1)
-            logger.debug("Sleeping for 1 second.")
+            logger.debug("Sleeping for a bit.")
+            time.sleep(1.5)
 
     def get_info(self, force=False):
         if self.bibkey and not force:
@@ -62,18 +66,19 @@ class Record(object):
         return True
 
     def get_citations(self, force=False):
-        if self.citations and not force:
+        if self.citations_dl and not force:
             logger.debug("Skipping downloading of citations.")
             return False
         record_regex = re.compile("/record/([0-9]*)")
         logger.debug("Downloading citations of {}".format(self.mid))
-        citations_html = urllib.request.urlopen(
-            self.inspire_url + "/citations").readlines()
+        citations_html = urllib.request.urlopen(self.inspire_url + "/citations").read().decode("utf-8")
+        # logger.debug("decode success")
         citations = []
         cocitations = []
         cocitations_started = False
-        for line in citations_html:
-            line = line.decode("utf-8")
+        for i, line in enumerate(citations_html.split('\n')):
+            # print(i, line )
+            # line = line.decode("utf-8")
             if "Co-cited with" in line:
                 cocitations_started = True
             if not cocitations_started:
@@ -86,10 +91,12 @@ class Record(object):
 
         self.citations = citations
         self.cocitations = cocitations
+        self.citations_dl = True
+        self.cocitations_dl = True
         return True
 
     def get_references(self, force=False):
-        if self.references and not force:
+        if self.references_dl and not force:
             logger.debug("Skipping downloading of references.")
             return False
         record_regex = re.compile("/record/([0-9]*)")
@@ -100,6 +107,7 @@ class Record(object):
         records = [record for record in records if not record == self.mid]
         logger.debug("{} is citing {} records".format(self.mid, len(records)))
         self.references = records
+        self.references_dl = True
         return True
 
     def __str__(self):
