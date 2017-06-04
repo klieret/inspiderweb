@@ -50,11 +50,13 @@ class DotGraph(object):
             from_id = connection[0]
             to_id = connection[1]
             if not from_id in self.node_styles or not self.node_styles[from_id]:
-                self.node_styles[from_id] = 'label="{}"'.format(
-                    self.db.get_record(from_id).label)
+                self.node_styles[from_id] = 'label="{}" URL="{}"'.format(
+                    self.db.get_record(from_id).label,
+                    self.db.get_record(from_id).inspire_url)
             if not to_id in self.node_styles or not self.node_styles[to_id]:
-                self.node_styles[to_id] = 'label="{}"'.format(
-                    self.db.get_record(to_id).label)
+                self.node_styles[to_id] = 'label="{}" URL="{}"'.format(
+                    self.db.get_record(to_id).label,
+                    self.db.get_record(to_id).inspire_url)
 
         for mid, style in self.node_styles.items():
             self._dot_str += '\t"{}" [{}];\n'.format(mid, style)

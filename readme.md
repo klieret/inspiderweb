@@ -2,15 +2,22 @@
 
 This is a tool to analyze networks papers referencing and citing each other. It acts as a web-crawler, extracting information from [inspirehep](http://inspirehep.net/), then uses the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language) to describe the network. The result can then be plotted by [Graphviz Package](http://www.graphviz.org/) and similar programs.
 
+## Features
+
+* Clickable nodes which open the paper in inspirehep! For this to work, do not use the ```-Tpdf``` option (as it uses cairo which does not support hyperlinks). Instead do ```dot -Tps2 dotfile.dot > tmp.ps && ps2pdf tmp.ps output.pdf```.  
+* Sort papers by year!
+
 ## Screenshots
 
+Small network of some 15 nodes, sorted by year (plotted with ```dot```):
+![by year](small_by_year.png)
 Plotting a small network of 17 nodes with ```dot```:
 ![dot](small_dot.png)
 Plotting a small network of 17 nodes with ```fdp```:
 ![fdp](small_fdp.png)
 
 
-## Features
+## How does it work?
 
 Right now for each paper, the following items are extracted:
 

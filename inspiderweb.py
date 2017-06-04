@@ -41,8 +41,13 @@ db.statistics()
 # db.save()
 
 seeds = []
+max_seeds = 20
+i=0
 with open("seed_ids_all.txt", "r") as seedfile:
     for line in seedfile:
+        # i+=1
+        if i==max_seeds:
+            break
         line = line.replace('\n', "")
         line = line.strip()
         if not line:
@@ -80,7 +85,7 @@ graph_style = \
     "graph [label=\"inspiderweb {date} {time}\", fontsize=40];".format(
         date=str(datetime.date.today()),
         time=str(datetime.datetime.now().time()))
-node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, shape=box];"
+node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, style=filled, color=green];"
 # size = 'ratio="0.5";'#''size="14,10";'
 # size = 'overlap=prism; overlap_scaling=0.01; ratio=0.7'
 size=";"
@@ -92,8 +97,8 @@ dg.style = style
 #      "//size=\"16.53,11.69\"; //a3\n"
 #      "//size=\"33.06,11.69\"\n"
 
-valid_source_id = lambda mid: db.get_record(mid).is_complete() and mid in seeds
-valid_target_id = lambda mid: db.get_record(mid).is_complete() and mid in seeds
+valid_source_id = lambda mid: db.get_record(mid).is_complete() #and mid in seeds
+valid_target_id = lambda mid: db.get_record(mid).is_complete() #and mid in seeds
 
 all_node_ids = set()
 
