@@ -109,7 +109,11 @@ class Record(object):
     # todo: make that accept arguments
     def autocomplete(self, force=False) -> bool:
         """ Download every possible piece of information.
-        Returns True if this was successfull.
+
+        Args:
+            force: Force redownload of the item.
+
+        Returns:  True if successfull.
         """
 
         a = self.get_info(force=force)
@@ -151,7 +155,7 @@ class Record(object):
         Returns:  True if successfull.
         """
 
-        if self.citations_dl and not force:
+        if self.citations_dl and self.cocitations_dl and not force:
             logger.debug("Skipping downloading of citations.")
             return False
         record_regex = re.compile("/record/([0-9]*)")

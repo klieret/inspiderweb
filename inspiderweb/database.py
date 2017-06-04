@@ -31,11 +31,12 @@ class Database(object):
         """ Print some statistics about the records in the database. """
         logger.info(" database statistics ".upper().center(50, "*"))
         logger.info("Current number of records: {}".format(len(self._records)))
-        # print(self._records.keys())
-        # for mid, r in self._records.items():
-        #     print(r.mid, r.is_complete())
-        logger.info("Current number of completed records: {}".format(
-            sum([int(r.is_complete()) for mid, r in self._records.items()])))
+        logger.info("Current number of records with references: {}".format(
+            sum([int(r.references_dl) for mid, r in self._records.items()])))
+        logger.info("Current number of records with citations: {}".format(
+            sum([int(r.citations_dl) for mid, r in self._records.items()])))
+        logger.info("Current number of records with cocitations: {}".format(
+            sum([int(r.cocitations_dl) for mid, r in self._records.items()])))
         logger.info("Current number of records with bibkey: {}".format(
             sum([int(bool(r.bibkey)) for mid, r in self._records.items()])
         ))
