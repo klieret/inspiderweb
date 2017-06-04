@@ -165,10 +165,10 @@ Afterwards, if we run the statistics again, we could see that we were successful
 
 Now we are ready to plot the relations between these nodes:
 
-    ./inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --output test.dot
-    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o test.dot
+    ./inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --output build/test.dot
+    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o build/test.dot
 
-This will produce the file ```test.dot```:
+This will produce the file ```build/test.dot``` (I chose to place all of the output files in the ```build``` repository as to not make the repository dirty):
 
     digraph g {
         
@@ -205,8 +205,8 @@ This will produce the file ```test.dot```:
 
 Note that we could also have done all of the above with just one command:
 
-    ./inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --updateseeds bib,refs --output test.dot
-    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -u bib,refs -o test.dot
+    ./inspiderweb.py --database db/test.pickle --plot --examples seeds/example_small.txt --updateseeds bib,refs --output build/test.dot
+    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -u bib,refs -o build/test.dot
 
 Note that running this should (basically) run straight through, without downloading anything, as all the information was saved in the database: This gives output like
 
@@ -228,7 +228,7 @@ Note that running this should (basically) run straight through, without download
 
 Now we are ready to use ```dot``` to plot this! The most basic command for ```.pdf``` output is:
 
-    dot -Tpdf test.dot > test.pdf 
+    dot -Tpdf build/test.dot > build/test.pdf 
 
 which gives us the following picture: 
 
@@ -236,8 +236,8 @@ which gives us the following picture:
 
 To get ```.pdf``` output with clickable nodes, we cannot use ```-Tpdf``` however, but instead first have to generate a ```.ps``` which we then convert via the ```ps2pdf``` utility:
 
-    dot -Tps2 test.dot > test.ps && ps2pdf test.ps test.pdf 
+    dot -Tps2 build/test.dot > test.ps && ps2pdf build/test.ps build/test.pdf 
 
 To get the graph sorted by years, simply supply the ```--rank year``` option. Doing all of this in one line (connecting different commands with ```&&```):
 
-    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o test.dot &&   dot -Tps2 test.dot > test.ps && ps2pdf test.ps test.pdf 
+    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o build/test.dot && dot -Tps2 build/test.dot > build/test.ps && ps2pdf build/test.ps build/test.pdf 
