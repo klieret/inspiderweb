@@ -14,7 +14,7 @@ class Database(object):
         self.backup_path = backup_path
 
     def statistics(self):
-        logger.info(" statistics ".upper().center(50, "*"))
+        logger.info(" database statistics ".upper().center(50, "*"))
         logger.info("Current number of records: {}".format(len(self._records)))
         # print(self._records.keys())
         # for mid, r in self._records.items():

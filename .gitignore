@@ -6,5 +6,4 @@ inspire_urls_example.txt
 *.png
 __pycache__/**
 inspiderweb/__pycache__/**
-seed*
 *.ps

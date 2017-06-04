@@ -15,13 +15,12 @@ description = r"""
  /  /`.,' `.,'\  \     inspirehep, then uses the dot languageto describe the
 /__/__/     \__\__\__  network. The result can then be plotted by the graphviz
 \  \  \     /  /  /    Package and similar programs.
- \  \,'`._,'`./  /     More info on the github page.
-  \,'`./___\,'`./
+ \  \,'`._,'`./  /     More info on the github page
+  \,'`./___\,'`./      https://github.com/klieret/inspiderweb
  ,'`-./_____\,-'`.
      /       \
     """
 
-# todo: add github url
 
 parser = argparse.ArgumentParser(description=description,
                                  prog="inspiderweb.py",
@@ -144,7 +143,6 @@ if args.updatedb:
                             references=("refs" in updates),
                             citations=("cites" in updates))
 
-
 if args.plot:
 
     dg = DotGraph(db)
@@ -166,10 +164,11 @@ if args.plot:
     #      "//size=\"16.53,11.69\"; //a3\n"
     #      "//size=\"33.06,11.69\"\n"
 
+    # fixme: Add otion to customize this
     def valid_connection(source, target):
-        return db.get_record(source).is_complete() and \
-               db.get_record(target).is_complete()
-
+        sr = db.get_record(source)
+        tr = db.get_record(target)
+        return sr.bibkey and tr.bibkey
 
     # fixme: use getter to get all records
     for mid, record in db._records.items():
