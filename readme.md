@@ -247,3 +247,7 @@ To get the graph sorted by years, simply supply the ```--rank year``` option. Do
     ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o build/test.dot && dot -Tps2 build/test.dot > build/test.ps && ps2pdf build/test.ps build/test.pdf 
 
 ![tutorial year picture](https://github.com/klieret/readme-files/blob/master/inspiderweb/tutorial_year.png)
+
+## License
+
+MIT license. See file ```license.txt``` enclosed in the repository.
