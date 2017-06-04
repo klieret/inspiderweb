@@ -186,3 +186,5 @@ if args.plot:
 
     dg.generate_dot_str(rank=args.rank)
     dg.write_to_file(args.output)
+
+db.save()
