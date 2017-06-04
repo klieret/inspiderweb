@@ -107,41 +107,137 @@ Misc:
   --forceupdate         For all information that we get from the database: Force redownload
 ```
 
-## The Dot Output
+## Tutorial
 
-The output looks something like this:
-```
-digraph g {
-    // Formatting of the whole Graph
-	graph [label="inspiderweb 2017-06-03 23:00:18.888432", fontsize=40];
-	node[fontsize=20, fontcolor=black, fontname=Arial, shape=box];
-	
-	// Adding nodes (optional, but we want to have specific labels)
-	"344595" [label="Blumlein:1992ej"];
-	"1302816" [label="Bevan:2014iga"];
-	"278386" [label="Hagiwara:1989gza"];
-	"1322383" [label="Aad:2014xea"];
-	"1111995" [label="Chatrchyan:2012meb"];
-	"153236" [label="Lepage:1980fj"];
-	"855936" [label="delAguila:2010mx"];
-	"279185" [label="Altarelli:1989ff"];
-	
-	// Connections
-	// Note that we use the id of inspirehep url as id
-	
-	"278386" -> "153236"; 
-	"1428667" -> "424861"; 
-	"1428667" -> "344595"; 
-	"1428667" -> "26255"; 
-	"1302816" -> "677093"; 
-	"424861" -> "344595"; 
-	"1428667" -> "353517"; 
-	"424861" -> "353517"; 
-	"1125962" -> "1111995"; 
-	"1125962" -> "591241"; 
-	"1204603" -> "892770"; 
-	"1322383" -> "1125962"; 
-}
-```
+In the following I will always give two lines, the second with the shortcut options, the first one with the longer (and easier to understand options). Instead of ```./inspiderweb.py```, you can also use ```python3 inspiderweb.py``` (which might be the better alternative on non-linux os). Note that paths that contain spaces must be enclosed in quotation marks.
 
-Sometimes it's easier to add style properties etc. just here in the output file before using ```graphiviz```.
+Displaying the help:
+
+    ./inspiderweb.py --help
+    ./inspiderweb.py --h
+    
+Printing statistics about our database (will always be printed if we run the program). It will only be created, so it will look pretty bleak. Of course you can supply your own name for the database, here it's ```test.pickle``` (in the ```db``` folder).
+
+    ./inspiderweb.py --database db/test.pickle
+    ./inspiderweb.py -d db/test.pickle
+
+Output:
+
+    WARNING: Could not load db from file.
+    INFO: ************** DATABASE STATISTICS ***************
+    INFO: Current number of records: 0
+    INFO: Current number of completed records: 0
+    INFO: Current number of records with bibkey: 0
+    INFO: **************************************************
+
+Add a few seeds (the ids of inspirehep, i.e. the number ```811388``` from ```http://inspirehep.net/record/811388/```) and download the bibinfo and the references. For this we use the example file in ```seeds/example_small.txt```.
+
+    ./inspiderweb.py --database db/test.pickle --seeds seeds/example_small.txt --updateseeds bib,refs
+    ./inspiderweb.py -d db/test.pickle -s seeds/example_small.txt -u bib,refs
+   
+This can take some time (around 40s, mainly because the script waits quite often to not overload the inspirehep server), while we see output like: 
+
+    INFO: ************** DATABASE STATISTICS ***************
+    INFO: Current number of records: 0
+    INFO: Current number of completed records: 0
+    INFO: Current number of records with bibkey: 0
+    INFO: **************************************************
+    INFO: Read 11 seeds from file seeds/example_small.txt.
+    DEBUG: Successfully saved db to db/test.pickle
+    DEBUG: Downloading bibfile of 1125962
+    DEBUG: Downloading from http://inspirehep.net/record/1125962/export/hx.
+    DEBUG: Download successfull. Sleeping for 3s.
+    DEBUG: Bibkey of 1125962 is Chatrchyan:2012gqa
+    DEBUG: Downloading references of 1125962
+    DEBUG: Downloading from http://inspirehep.net/record/1125962/references.
+    DEBUG: Download successfull. Sleeping for 3s.
+    DEBUG: 1125962 is citing 44 records
+    ...
+
+Afterwards, if we run the statistics again, we could see that we were successfull:
+
+    DEBUG: Successfully loaded db from db/test.pickle
+    INFO: ************** DATABASE STATISTICS ***************
+    INFO: Current number of records: 10
+    INFO: Current number of completed records: 0
+    INFO: Current number of records with bibkey: 10
+    INFO: **************************************************
+
+Now we are ready to plot the relations between these nodes:
+
+    ./inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --output test.dot
+    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o test.dot
+
+This will produce the file ```test.dot```:
+
+    digraph g {
+        
+        // Formatting of the whole Graph
+    
+        graph [label="inspiderweb 2017-06-04 16:02:09.361469", fontsize=40];
+        node[fontsize=20, fontcolor=black, fontname=Arial, style=filled, color=green];	
+        
+        // Adding nodes (optional, but we want to have specific labels)
+        
+        "591241" [label="Sullivan:2002jt" URL="http://inspirehep.net/record/591241"];
+        "855936" [label="delAguila:2010mx" URL="http://inspirehep.net/record/855936"];
+        "1111995" [label="Chatrchyan:2012meb" URL="http://inspirehep.net/record/1111995"];
+        "279185" [label="Altarelli:1989ff" URL="http://inspirehep.net/record/279185"];
+        "1125962" [label="Chatrchyan:2012gqa" URL="http://inspirehep.net/record/1125962"];
+        "892770" [label="Grojean:2011vu" URL="http://inspirehep.net/record/892770"];
+        "1322383" [label="Aad:2014xea" URL="http://inspirehep.net/record/1322383"];
+        "677093" [label="Schmaltz:2005ky" URL="http://inspirehep.net/record/677093"];
+        "1204603" [label="Han:2012vk" URL="http://inspirehep.net/record/1204603"];
+        
+        // Connections
+	
+        "1204603" -> "1111995"; 
+        "1111995" -> "279185"; 
+        "1125962" -> "1111995"; 
+        "1125962" -> "591241"; 
+        "1322383" -> "591241"; 
+        "892770" -> "591241"; 
+        "1322383" -> "1125962"; 
+        "1125962" -> "677093"; 
+        "892770" -> "855936"; 
+        "1204603" -> "892770"; 
+    }%                               
+
+Note that we could also have done all of the above with just one command:
+
+    ./inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --updateseeds bib,refs --output test.dot
+    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -u bib,refs -o test.dot
+
+Note that running this should (basically) run straight through, without downloading anything, as all the information was saved in the database: This gives output like
+
+    ...
+    DEBUG: Skipping downloading of info.
+    DEBUG: Skipping downloading of references.
+    DEBUG: Skipping downloading of info.
+    DEBUG: Skipping downloading of references.
+    DEBUG: Skipping downloading of info.
+    DEBUG: Skipping downloading of references.
+    DEBUG: Successfully saved db to db/test.pickle
+    DEBUG: Skipping downloading of info.
+    DEBUG: Skipping downloading of references.
+    DEBUG: Skipping downloading of info.
+    DEBUG: Skipping downloading of references.
+    DEBUG: Skipping downloading of info.
+    DEBUG: Skipping downloading of references.
+    ...
+
+Now we are ready to use ```dot``` to plot this! The most basic command for ```.pdf``` output is:
+
+    dot -Tpdf test.dot > test.pdf 
+
+which gives us the following picture: 
+
+![tutorial first picture](tutorial.png)
+
+To get ```.pdf``` output with clickable nodes, we cannot use ```-Tpdf``` however, but instead first have to generate a ```.ps``` which we then convert via the ```ps2pdf``` utility:
+
+    dot -Tps2 test.dot > test.ps && ps2pdf test.ps test.pdf 
+
+To get the graph sorted by years, simply supply the ```--rank year``` option. Doing all of this in one line (connecting different commands with ```&&```):
+
+    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o test.dot &&   dot -Tps2 test.dot > test.ps && ps2pdf test.ps test.pdf 

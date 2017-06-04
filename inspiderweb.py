@@ -105,6 +105,7 @@ if args.seeds:
             if not line:
                 continue
             seeds.append(line)
+    logger.info("Read {} seeds from file {}.".format(len(seeds), args.seeds))
 
 if args.updateseeds:
     updates = args.updateseeds.split(',')
@@ -115,9 +116,9 @@ if args.updateseeds:
 
     # todo: this is basically a copy of what is being done in ...
     # ... db.autocomplete_records... maybe join both?
-    saveefery = 5
+    saveevery = 5
     for i, seed in enumerate(seeds):
-        if i % 0 == 0:
+        if i % saveevery == 0:
             db.save()
         record = db.get_record(seed)
         if "bib" in updates:
@@ -125,7 +126,7 @@ if args.updateseeds:
         if "cites" in updates:
             record.get_citations(force=args.forceupdate)
         if "refs" in updates:
-            record.get_citations(force=args.forceupdate)
+            record.get_references(force=args.forceupdate)
         db.update_record(record.mid, record)
 
         # add citations/references to db
@@ -148,11 +149,12 @@ if args.plot:
     dg = DotGraph(db)
 
     graph_style = \
-        "graph [label=\"inspiderweb {date} {time}\", fontsize=40];".format(
+        "graph [label=\"inspiderweb {date} {time}\", fontsize=20];".format(
             date=str(datetime.date.today()),
             time=str(datetime.datetime.now().time()))
-    node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, " \
+    node_style = "node[fontsize=10, fontcolor=black, fontname=Arial, " \
                  "style=filled, color=green];"
+    # fixme: why is there still no line break/semicolon after this?
     # size = 'ratio="0.5";'#''size="14,10";'
     # size = 'overlap=prism; overlap_scaling=0.01; ratio=0.7'
     size = ";"
