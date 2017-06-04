@@ -14,12 +14,14 @@ class Database(object):
         self.backup_path = backup_path
 
     def statistics(self):
+        logger.info("statistics".upper().center(30, "*"))
         logger.info("Current number of records: {}".format(len(self._records)))
         # print(self._records.keys())
         # for mid, r in self._records.items():
         #     print(r.mid, r.is_complete())
         logger.info("Current number of completed records: {}".format(
             sum([int(r.is_complete()) for mid, r in self._records.items()])))
+        logger.info("*"*30)
 
     def load(self, path=""):
         if not path:

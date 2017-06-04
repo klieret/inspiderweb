@@ -7,7 +7,7 @@ import re
 logger = logging.getLogger("inspirespider")
 
 
-def download(url: str, retries=3, timeout=5, sleep_after=3,
+def download(url: str, retries=3, timeout=10, sleep_after=3,
              raise_exception=False) -> str:
     """ Download from url with automatic retries
     :param url: Url to download.
@@ -37,6 +37,8 @@ def download(url: str, retries=3, timeout=5, sleep_after=3,
     if string:
         return string
 
+
+    logger.error("Finally failed to download {}. Now stopping.".format(url))
     if raise_exception:
         raise TimeoutError
 
@@ -44,6 +46,7 @@ def download(url: str, retries=3, timeout=5, sleep_after=3,
 
 
 class Record(object):
+    # todo: remember if download failed before, so that we don't have to retry every single time.
     def __init__(self, mid, label=None):
         self.inspire_url = "http://inspirehep.net/record/{}".format(mid)
         self._label = label
@@ -89,6 +92,8 @@ class Record(object):
         bibkey_regex = re.compile(r"@\w*\{([^,]*),")
         logger.debug("Downloading bibfile of {}".format(self.mid))
         bib_entry = download(self.inspire_url + "/export/hx")
+        if not bib_entry:
+            return False
         bibkey = bibkey_regex.search(bib_entry).group(1)
         logger.debug("Bibkey of {} is {}".format(self.mid, bibkey))
         self.bibkey = bibkey
@@ -101,6 +106,8 @@ class Record(object):
         record_regex = re.compile("/record/([0-9]*)")
         logger.debug("Downloading citations of {}".format(self.mid))
         citations_html = download(self.inspire_url + "/citations")
+        if not citations_html:
+            return False
         # logger.debug("decode success")
         citations = []
         cocitations = []
@@ -132,6 +139,8 @@ class Record(object):
         record_regex = re.compile("/record/([0-9]*)")
         logger.debug("Downloading references of {}".format(self.mid))
         reference_html = download(self.inspire_url + "/references")
+        if not reference_html:
+            return False
         records = record_regex.findall(reference_html)
         records = [record for record in records if not record == self.mid]
         logger.debug("{} is citing {} records".format(self.mid, len(records)))
