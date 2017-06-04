@@ -30,30 +30,31 @@ db.statistics()
 
 #sys.exit(0)
 
-db.save()
+# db.save()
 
-seeds = []
-with open("seed_ids_small.txt", "r") as seedfile:
-    for line in seedfile:
-        line = line.replace('\n', "")
-        line = line.strip()
-        if not line:
-            continue
-        seeds.append(line)
-
-for seed in seeds:
-    record = db.get_record(seed)
-    for citation in record.references:
-        # print(citation, citation in db._records)
-        r = db.get_record(citation)
-        db.update_record(r.mid, r)
-        # print(citation, citation in db._records)
+# seeds = []
+# with open("seed_ids_small.txt", "r") as seedfile:
+#     for line in seedfile:
+#         line = line.replace('\n', "")
+#         line = line.strip()
+#         if not line:
+#             continue
+#         seeds.append(line)
+#
+# for seed in seeds:
+#     record = db.get_record(seed)
+#     for citation in record.references:
+#         # print(citation, citation in db._records)
+#         r = db.get_record(citation)
+#         db.update_record(r.mid, r)
+#         # print(citation, citation in db._records)
 
 
 # db.statistics()
 # print(db.statistics())
 
-db.autocomplete_records()
+db.autocomplete_records(citations=False, references=False)
+db.save()
 
 sys.exit(0)
 

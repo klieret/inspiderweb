@@ -14,14 +14,17 @@ class Database(object):
         self.backup_path = backup_path
 
     def statistics(self):
-        logger.info("statistics".upper().center(30, "*"))
+        logger.info(" statistics ".upper().center(50, "*"))
         logger.info("Current number of records: {}".format(len(self._records)))
         # print(self._records.keys())
         # for mid, r in self._records.items():
         #     print(r.mid, r.is_complete())
         logger.info("Current number of completed records: {}".format(
             sum([int(r.is_complete()) for mid, r in self._records.items()])))
-        logger.info("*"*30)
+        logger.info("Current number of records with bibkey: {}".format(
+            sum([int(bool(r.bibkey)) for mid, r in self._records.items()])
+        ))
+        logger.info("*"*50)
 
     def load(self, path=""):
         if not path:
@@ -39,16 +42,28 @@ class Database(object):
         pickle.dump(self._records, open(path, "wb"))
         logger.debug("Successfully saved db to {}".format(path))
 
-    def autocomplete_records(self, force=False, save_every=1):
+    def autocomplete_records(self, force=False, save_every=5,
+                             info=True,
+                             references=True,
+                             citations=True):
+
         i = 0
         for mid, record in self._records.items():
             i += 1
             if i % save_every == 0:
                 self.save()
-            if i % 5 == 0:
-                time.sleep(5)
+            if i % 10 == 0:
+                self.statistics()
                 logger.debug("Sleeping a bit longer.")
-            record.autocomplete(force=force)
+                time.sleep(15)
+
+            if info:
+                record.get_info(force=force)
+            if references:
+                record.get_references(force=force)
+            if citations:
+                record.get_citations(force=force)
+
             self.update_record(mid, record)
 
     def get_record(self, mid):
