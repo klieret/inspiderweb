@@ -1,5 +1,11 @@
 import logging
 
+""" Part of inspiderweb: Tool to analyze paper reference networks.
+Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
+
+This file sets up logger/logging.
+"""
+
 logger = logging.getLogger("inspirespider")
 
 if not len(logger.handlers) == 1:

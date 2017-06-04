@@ -4,10 +4,18 @@ import socket
 import re
 from .log import logger
 
+""" Part of inspiderweb: Tool to analyze paper reference networks.
+Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
+
+This file defines the Record class which describes one paper/record from
+inspirehep.
+"""
+
 
 def download(url: str, retries=3, timeout=10, sleep_after=3,
              raise_exception=False) -> str:
-    """ Download from url with automatic retries
+    """ Download from url with automatic retries.
+    Also prints logging messages.
 
     Args:
         url: Url to download.
@@ -45,16 +53,14 @@ def download(url: str, retries=3, timeout=10, sleep_after=3,
 
 
 class Record(object):
-    # todo: remember if download failed before, so that we don't have to retry every single time.
+    """ Instances of the record class describe one paper/record from
+    inspirehep.
+    """
     def __init__(self, mid, label=None):
         self.inspire_url = "http://inspirehep.net/record/{}".format(mid)
         self._label = label
         self.bibkey = ""
         self.mid = mid
-        # if label:
-        #     self.label = label
-        # else:
-        #     self.label = self.inspire_url.split('/')[-1]
         self.references_dl = False
         self.references = []
         self.citations_dl = False
@@ -62,6 +68,7 @@ class Record(object):
         self.cocitations_dl = False
         self.cocitations = []
 
+    # fixme: Rather separate that from self._label so that we can combine bibkey and label
     @property
     def label(self):
         if self.bibkey:
@@ -74,17 +81,27 @@ class Record(object):
     def label(self, label):
         self._label = label
 
-    def is_complete(self):
+    def is_complete(self) -> bool:
+        """ Did we download all the information that we can download?"""
         return bool(self.bibkey and self.references_dl and self.citations_dl
                     and self.cocitations_dl)
 
-    def autocomplete(self, force=False):
-        self.get_info(force=force)
-        self.get_citations(force=force)
-        self.get_references(force=force)
+    # todo: make that accept argument
+    def autocomplete(self, force=False) -> bool:
+        """ Download every possible piece of information.
+        Returns True if this was successfull.
+        """
 
+        a = self.get_info(force=force)
+        b = self.get_citations(force=force)
+        c = self.get_references(force=force)
+        return a and b and c
 
-    def get_info(self, force=False):
+    def get_info(self, force=False) -> bool:
+        """ Download the bibfile of the record from inspirehep and parse it
+        to extract the bibkey. Returns true if this was successfull.
+        """
+
         if self.bibkey and not force:
             logger.debug("Skipping downloading of info.")
             return False
@@ -98,7 +115,12 @@ class Record(object):
         self.bibkey = bibkey
         return True
 
-    def get_citations(self, force=False):
+    def get_citations(self, force=False) -> bool:
+        """ Download (co)citations from inspirehep. Note that the download
+        might take quite some time, if the paper got (co)cited really
+        often. Returns true if this was successfull.
+        """
+
         if self.citations_dl and not force:
             logger.debug("Skipping downloading of citations.")
             return False
@@ -107,14 +129,11 @@ class Record(object):
         citations_html = download(self.inspire_url + "/citations")
         if not citations_html:
             return False
-        # logger.debug("decode success")
         citations = []
         cocitations = []
         # fixme: Parsing should definitely be improved
         cocitations_started = False
         for i, line in enumerate(citations_html.split('\n')):
-            # print(i, line )
-            # line = line.decode("utf-8")
             if "Co-cited with" in line:
                 cocitations_started = True
             if not cocitations_started:
@@ -131,7 +150,10 @@ class Record(object):
         self.cocitations_dl = True
         return True
 
-    def get_references(self, force=False):
+    def get_references(self, force=False) -> bool:
+        """ Download references from inspirehep. Returns true if this was
+        successfull.
+        """
         if self.references_dl and not force:
             logger.debug("Skipping downloading of references.")
             return False

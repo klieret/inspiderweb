@@ -2,7 +2,19 @@ import re
 import collections
 from .log import logger
 
+""" Part of inspiderweb: Tool to analyze paper reference networks.
+Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
+
+This file defines the DotGraph class which is used to generate the string
+in dot language that describes the graph which is formed by the papers/records
+referencing each other.
+"""
+
+
 class DotGraph(object):
+    """ Objects of DotGraph class is used to generate the string
+    in dot language that describes the graph which is formed by the
+    papers/records referencing each other."""
     def __init__(self, db):
         self.db = db
         self._dot_str = ""

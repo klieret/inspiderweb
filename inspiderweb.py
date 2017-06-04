@@ -8,6 +8,12 @@ import sys
 import argparse
 from argparse import RawTextHelpFormatter
 
+""" Main file of inspiderweb: Tool to analyze paper reference networks.
+Currently hosted at: https://github.com/klieret/inspiderweb
+
+Run this file via `python3 inspiderweb.py --help` for instructions on
+usage. """
+
 description = r"""
     INSPIDERWEB
  `.,-'\_____/`-.,'     Tool to analyze networks papers referencing and citing each
@@ -19,9 +25,10 @@ description = r"""
   \,'`./___\,'`./      https://github.com/klieret/inspiderweb
  ,'`-./_____\,-'`.
      /       \
-    """
+"""
 
 
+# Use the RawTextHelpFormatter in order to allow linebreaks in the description
 parser = argparse.ArgumentParser(description=description,
                                  prog="inspiderweb.py",
                                  formatter_class=RawTextHelpFormatter,
@@ -149,17 +156,18 @@ if args.plot:
 
     dg = DotGraph(db)
 
+    # ALWAYS END EVERYTHING WITH A SEMICOLON
+    # EXCEPT THINGS IN SQUARE BRACKETS: USE COMMA
     graph_style = \
         "graph [label=\"inspiderweb {date} {time}\", fontsize=40];".format(
             date=str(datetime.date.today()),
             time=str(datetime.datetime.now().time()))
     node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, " \
                  "style=filled, color=green];"
-    # fixme: why is there still no line break/semicolon after this?
-    size = 'ratio="0.3";'#''size="14,10";'
+    # size = 'ratio="0.3";'#''size="14,10";'
     # size = 'overlap=prism; overlap_scaling=0.01; ratio=0.7'
     size = ";"
-    style = graph_style + node_style + size
+    style = '\n'.join([graph_style, node_style, size])
     dg._style = style
     # "//ratio=\"1:1\";\n"
     #      "//ratio=\"fill\";\n"
@@ -167,7 +175,7 @@ if args.plot:
     #      "//size=\"16.53,11.69\"; //a3\n"
     #      "//size=\"33.06,11.69\"\n"
 
-    # fixme: Add otion to customize this
+    # todo: Add otion to customize this
     def valid_connection(source, target):
         sr = db.get_record(source)
         tr = db.get_record(target)
