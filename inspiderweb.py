@@ -138,7 +138,9 @@ if args.updateseeds:
         db.update_record(record.mid, record)
 
         # add citations/references to db
-        for related in record.citations + record.references:
+        for related in record.citations:
+            db.get_record(related)
+        for related in record.references:
             db.get_record(related)
 
 if args.updatedb:
