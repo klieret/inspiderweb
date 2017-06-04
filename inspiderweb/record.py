@@ -6,16 +6,16 @@ import re
 
 logger = logging.getLogger("inspirespider")
 
-
 def download(url: str, retries=3, timeout=10, sleep_after=3,
              raise_exception=False) -> str:
     """ Download from url with automatic retries
-    :param url: Url to download.
-    :param retries: Number of possible retries.
-    :param timeout: Abort downloading after $timeout s.
-    :param sleep_after: Time [s] to sleep after each attempt.
-    :param raise_exception: Raise Exception if download fails after retries.
-    :return: Downloaded and decoded web page.
+
+    Args:
+        url: Url to download.
+        retries: Number of possible retries.
+        timeout: Abort downloading after $timeout s.
+        sleep_after: Time [s] to sleep after each attempt.
+        raise_exception: Raise Exception if download fails after retries.
     """
     socket.setdefaulttimeout(timeout)
     string = ""

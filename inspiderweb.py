@@ -7,6 +7,14 @@ from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
 import sys
 
+# todo: add docstrings
+# todo: separate in several scripts, that download information or plot the graph
+# todo: add argparse interface
+# todo: maybe use a proper format to save the record data or at least allow to export into such
+# todo: add clusters
+# todo: make clickable
+# todo: extract more infomration; add title as tooltip
+
 logger = logging.getLogger("inspirespider")
 logger.setLevel(logging.DEBUG)
 sh = logging.StreamHandler()
@@ -32,33 +40,39 @@ db.statistics()
 
 # db.save()
 
-# seeds = []
-# with open("seed_ids_small.txt", "r") as seedfile:
-#     for line in seedfile:
-#         line = line.replace('\n', "")
-#         line = line.strip()
-#         if not line:
-#             continue
-#         seeds.append(line)
-#
-# for seed in seeds:
-#     record = db.get_record(seed)
-#     for citation in record.references:
-#         # print(citation, citation in db._records)
-#         r = db.get_record(citation)
-#         db.update_record(r.mid, r)
-#         # print(citation, citation in db._records)
+seeds = []
+with open("seed_ids_all.txt", "r") as seedfile:
+    for line in seedfile:
+        line = line.replace('\n', "")
+        line = line.strip()
+        if not line:
+            continue
+        seeds.append(line)
+
+for seed in seeds:
+    record = db.get_record(seed)
+    # record.autocomplete()
+    for citation in record.references:
+        # print(citation, citation in db._records)
+        r = db.get_record(citation)
+        db.update_record(r.mid, r)
+        # print(citation, citation in db._records)
+    for citation in record.citations:
+        # print(citation, citation in db._records)
+        r = db.get_record(citation)
+        db.update_record(r.mid, r)
+        # print(citation, citation in db._records)
 
 
 # db.statistics()
 # print(db.statistics())
 
-db.autocomplete_records(citations=False, references=False)
-db.save()
+# db.autocomplete_records(citations=False, references=False)
+# db.save()
 
-sys.exit(0)
+# sys.exit(0)
 
-print("seeds", seeds)
+# print("seeds", seeds)
 
 dg = DotGraph(db)
 
@@ -67,7 +81,9 @@ graph_style = \
         date=str(datetime.date.today()),
         time=str(datetime.datetime.now().time()))
 node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, shape=box];"
-size = 'size="30,30"; ration="fill"'#''size="14,10";'
+# size = 'ratio="0.5";'#''size="14,10";'
+# size = 'overlap=prism; overlap_scaling=0.01; ratio=0.7'
+size=";"
 style = graph_style + node_style + size
 dg.style = style
 # "//ratio=\"1:1\";\n"
@@ -79,12 +95,16 @@ dg.style = style
 valid_source_id = lambda mid: db.get_record(mid).is_complete() and mid in seeds
 valid_target_id = lambda mid: db.get_record(mid).is_complete() and mid in seeds
 
+all_node_ids = set()
+
 for mid, record in db._records.items():
     for reference_id in record.references:
         if not valid_target_id(reference_id):
             continue
         if not valid_source_id(mid):
             continue
+        all_node_ids.add(record.mid)
+        all_node_ids.add(reference_id)
         dg.add_connection(record.mid, reference_id)
     for citation_id in record.citations:
         if not valid_source_id(citation_id):
@@ -92,6 +112,33 @@ for mid, record in db._records.items():
         if not valid_target_id(mid):
             continue
         dg.add_connection(citation_id, record.mid)
+        all_node_ids.add(record.mid)
+        all_node_ids.add(citation_id)
+
+import collections
+node_ids_by_year = collections.defaultdict(set)
+import re
+year_regex = re.compile(r".*:([0-9]{4}).*")
+
+for node_id in all_node_ids:
+    bibkey = db.get_record(node_id).bibkey
+    try:
+        year = year_regex.match(bibkey).group(1)
+    except:
+        continue
+    print(node_id, bibkey, year)
+    node_ids_by_year[year].add(node_id)
+
+
+
+string = "\t{\n \tnode [shape=circle, fontsize=16, style=filled, color=yellow];"
+
+string += "->".join(list(sorted(node_ids_by_year.keys(), reverse=True)))
+string += "}\n"
+
+for year, node_ids in node_ids_by_year.items():
+    string += "\t {{rank=same; {}; {} }}\n".format(year, "; ".join(node_ids))
+dg.rank_specs += string
 
 # for mid in seeds:
 #      dg.add_node(mid, 'label="{}",color="cadetblue",style="filled"'.format(
