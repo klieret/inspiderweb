@@ -9,8 +9,10 @@ This is a tool to analyze networks papers referencing and citing each other. It 
 
 ## Screenshots
 
+A small number of papers which reference each other, sorted by the year the papers were published:
 ![opening picture](https://github.com/klieret/readme-files/blob/master/inspiderweb/opening.jpg)
 
+A big number of papers which reference each other, sorted by the year the papers were published: [PDF with clickable nodes](https://rawgit.com/klieret/readme-files/master/inspiderweb/clickable_dotfile_huge.pdf).
 <!--Small network of some 15 nodes, sorted by year (plotted with ```dot```):-->
 <!--![by year](_small_by_year.png)-->
 <!--Plotting a small network of 17 nodes with ```dot```:-->
