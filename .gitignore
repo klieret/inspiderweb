@@ -7,3 +7,4 @@ inspire_urls_example.txt
 __pycache__/**
 inspiderweb/__pycache__/**
 seed*
+*.ps
