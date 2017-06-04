@@ -54,25 +54,23 @@ class DotGraph(object):
         """ Return the string of dot language that describes the graph. """
         return self._dot_str
 
-    def generate_dot_str(self, rank=""):
-        """ Main working part of this class: Generate the string of
-        dot language describing the graph.
-
-        Args:
-            rank: Currently only support "year". If supplied, all nodes of the
-                  same year will be on the same height and we will have a
-                  bar on the left side with the years.
-        """
+    def _draw_start(self) -> None:
+        """ Begin graph in dot string. """
         self._dot_str = ""
         self._dot_str += "digraph g {\n"
         indented = ";\n".join(['\t' + line for line in self._style.split(';')
                                if line])
         self._dot_str += indented
 
-        for connection in self._connections:
-            self._all_node_ids.add(connection[0])
-            self._all_node_ids.add(connection[1])
+    def _draw_ranks(self, rank: str) -> None:
+        """ If nodes are added to a `rank=same` part, they will all appear
+        on the same vertical coordinate.
 
+        Args:
+            rank: Currently only supported option: year. Sorts by years.
+
+        Returns: None
+        """
         if rank == "":
             pass
         elif rank == "year":
@@ -97,6 +95,10 @@ class DotGraph(object):
         else:
             logger.warning("Unknown rank option {}".format(rank))
 
+    def _draw_clusters(self) -> None:
+        """ Cluster several entries.
+        """
+
         for cluster_id, cluster in self._clusters.items():
                 # for cluster, items in clusters.items():
                 self._dot_str += '\t\tsubgraph "cluster_{}" {{\n'.format(
@@ -114,6 +116,10 @@ class DotGraph(object):
                     self._dot_str += '\t\t"{};\n'.format(mid)
                 self._dot_str += "\t}\n"
 
+    def _draw_nodes(self) -> None:
+        """ Draw nodes/style nodes (assign label etc.)
+        """
+
         for node_id in self._all_node_ids:
             if node_id not in self._node_styles or not self._node_styles[node_id]:
                 self._node_styles[node_id] = 'label="{}" URL="{}"'.format(
@@ -123,11 +129,37 @@ class DotGraph(object):
         for mid, style in self._node_styles.items():
             self._dot_str += '\t"{}" [{}];\n'.format(mid, style)
 
+    def _draw_connections(self) -> None:
+        """ Add the connections to the dot strings.
+        """
         for connection in self._connections:
             self._dot_str += '\t"{}" -> "{}"; \n'.format(connection[0],
                                                          connection[1])
 
+    def _draw_end(self) -> None:
+        """ End the digraph. """
+
         self._dot_str += "}"
+
+    def generate_dot_str(self, rank=""):
+        """ Generate the string of
+        dot language describing the graph.
+
+        Args:
+            rank: Currently only support "year".
+        """
+
+        for connection in self._connections:
+            self._all_node_ids.add(connection[0])
+            self._all_node_ids.add(connection[1])
+
+        self._draw_start()
+        self._draw_ranks(rank)
+        self._draw_clusters()
+        self._draw_nodes()
+        self._draw_connections()
+        self._draw_end()
+
         return self._dot_str
 
     def write_to_file(self, path: str):
