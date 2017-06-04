@@ -218,7 +218,7 @@ This will produce the file ```build/test.dot``` (I chose to place all of the out
 
 Note that we could also have done all of the above with just one command:
 
-    ./inspiderweb.py --database db/test.pickle --plot --examples seeds/example_small.txt --updateseeds bib,refs --output build/test.dot
+    ./inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --updateseeds bib,refs --output build/test.dot
     ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -u bib,refs -o build/test.dot
 
 Note that running this should (basically) run straight through, without downloading anything, as all the information was saved in the database: This gives output like
