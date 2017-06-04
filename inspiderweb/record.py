@@ -77,18 +77,10 @@ class Record(object):
                     and self.cocitations_dl)
 
     def autocomplete(self, force=False):
-        reloaded = self.get_info(force=force)
-        if reloaded:
-            logger.debug("Sleeping for a bit.")
-            time.sleep(1.5)
-        reloaded = self.get_citations(force=force)
-        if reloaded:
-            logger.debug("Sleeping for a bit.")
-            time.sleep(1.5)
-        reloaded = self.get_references(force=force)
-        if reloaded:
-            logger.debug("Sleeping for a bit.")
-            time.sleep(1.5)
+        self.get_info(force=force)
+        self.get_citations(force=force)
+        self.get_references(force=force)
+
 
     def get_info(self, force=False):
         if self.bibkey and not force:
