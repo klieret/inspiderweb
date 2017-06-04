@@ -1,8 +1,9 @@
 *.dot
 *.pdf
 *.pickle
-insire_urls_example.txt
+inspire_urls_example.txt
 .idea/**
 *.png
 __pycache__/**
 inspiderweb/__pycache__/**
+seed*
