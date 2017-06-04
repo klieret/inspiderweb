@@ -41,11 +41,14 @@ class Database(object):
         ))
         logger.info("*"*50)
 
-    # todo: allow joining of records!
-    def load(self, path="") -> True:
-        """ Load the database from file. Returns True if this was successfull.
+    def load(self, path="") -> bool:
+        """ Load/merge the database from file $path.
+        Returns True if this was successfull.
         If the path doesn't exist, only a logging.error message will be
         written. If no path is given self.backup_path will be used.
+
+        Args:
+            path: Path of other database.
         """
 
         if not path:
@@ -53,7 +56,11 @@ class Database(object):
         if not os.path.exists(path):
             logger.warning("Could not load db from file.")
             return False
-        self._records = pickle.load(open(path, "rb"))
+        for mid, their_record in pickle.load(open(path, "rb")).items():
+            assert mid == their_record.mid
+            my_record = self.get_record(mid)
+            my_record.merge(their_record)
+            self.update_record(mid, my_record)
         logger.debug("Successfully loaded db from {}".format(path))
         return True
 

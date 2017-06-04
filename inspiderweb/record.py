@@ -44,7 +44,6 @@ def download(url: str, retries=3, timeout=10, sleep_after=3,
     if string:
         return string
 
-
     logger.error("Finally failed to download {}. Now stopping.".format(url))
     if raise_exception:
         raise TimeoutError
@@ -68,6 +67,27 @@ class Record(object):
         self.cocitations_dl = False
         self.cocitations = set([])
 
+    def merge(self, other) -> None:
+        """ Merge this record with another Record
+        Args:
+         other: other record to be merged into this one
+
+        Returns: None
+        """
+
+        assert self.inspire_url == other.inspire_url
+        if self.bibkey and other.bibkey:
+            assert self.bibkey == other.bibkey
+        if not self.bibkey:
+            self.bibkey = other.bibkey
+        assert self.mid == other.mid
+        self.references.update(other.references)
+        self.citations.update(other.citations)
+        self.cocitations.update(other.cocitations)
+
+        if not self._label:
+            self._label = other.label
+
     # fixme: Rather separate that from self._label so that we can combine bibkey and label
     @property
     def label(self):
@@ -86,7 +106,7 @@ class Record(object):
         return bool(self.bibkey and self.references_dl and self.citations_dl
                     and self.cocitations_dl)
 
-    # todo: make that accept argument
+    # todo: make that accept arguments
     def autocomplete(self, force=False) -> bool:
         """ Download every possible piece of information.
         Returns True if this was successfull.
@@ -99,7 +119,12 @@ class Record(object):
 
     def get_info(self, force=False) -> bool:
         """ Download the bibfile of the record from inspirehep and parse it
-        to extract the bibkey. Returns true if this was successfull.
+        to extract the bibkey.
+
+        Args:
+            force: Force redownload of the item.
+
+        Returns:  True if successfull.
         """
 
         if self.bibkey and not force:
@@ -118,7 +143,12 @@ class Record(object):
     def get_citations(self, force=False) -> bool:
         """ Download (co)citations from inspirehep. Note that the download
         might take quite some time, if the paper got (co)cited really
-        often. Returns true if this was successfull.
+        often.
+
+        Args:
+            force: Force redownload of the item.
+
+        Returns:  True if successfull.
         """
 
         if self.citations_dl and not force:
@@ -151,8 +181,12 @@ class Record(object):
         return True
 
     def get_references(self, force=False) -> bool:
-        """ Download references from inspirehep. Returns true if this was
-        successfull.
+        """ Download references from inspirehep.
+
+        Args:
+            force: Force redownload of the item.
+
+        Returns:  True if successfull.
         """
         if self.references_dl and not force:
             logger.debug("Skipping downloading of references.")
@@ -165,7 +199,7 @@ class Record(object):
         records = record_regex.findall(reference_html)
         records = [record for record in records if not record == self.mid]
         logger.debug("{} is citing {} records".format(self.mid, len(records)))
-        self.references.update(ecords)
+        self.references.update(records)
         self.references_dl = True
         return True
 
