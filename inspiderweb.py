@@ -61,10 +61,10 @@ misc_options.add_argument("-h", "--help",
 misc_options.add_argument("--rank", required=False,
                           help="Rank by [year]", default="",
                           type=str)
-misc_options.add_argument("--maxseeds", required=False,
+misc_options.add_argument("--maxseeds", required=False, type=int,
                           help="Maximum number of seeds (for testing "
                                "purposes).",
-                          type=str, default=0)
+                          default=0)
 misc_options.add_argument("--forceupdate", action="store_true",
                           help="For all information that we get from the "
                                "database: Force redownload")
@@ -149,13 +149,13 @@ if args.plot:
     dg = DotGraph(db)
 
     graph_style = \
-        "graph [label=\"inspiderweb {date} {time}\", fontsize=20];".format(
+        "graph [label=\"inspiderweb {date} {time}\", fontsize=40];".format(
             date=str(datetime.date.today()),
             time=str(datetime.datetime.now().time()))
-    node_style = "node[fontsize=10, fontcolor=black, fontname=Arial, " \
+    node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, " \
                  "style=filled, color=green];"
     # fixme: why is there still no line break/semicolon after this?
-    # size = 'ratio="0.5";'#''size="14,10";'
+    size = 'ratio="0.3";'#''size="14,10";'
     # size = 'overlap=prism; overlap_scaling=0.01; ratio=0.7'
     size = ";"
     style = graph_style + node_style + size
@@ -170,7 +170,7 @@ if args.plot:
     def valid_connection(source, target):
         sr = db.get_record(source)
         tr = db.get_record(target)
-        return sr.bibkey and tr.bibkey
+        return sr.bibkey and tr.bibkey and source in seeds and target in seeds
 
     # fixme: use getter to get all records
     for mid, record in db._records.items():
