@@ -100,6 +100,9 @@ if args.updateseeds and not args.seeds:
 
 # todo: Use API instead of parsing. But I don't see where there is a clear ...
 # ...link to cited documents....
+# via citedby:recid:1471118
+# Use API via refersto:recid:1471118 etc. to get refernces NOTE: WE CAN EVEN NEST THOSE! http://inspirehep.net/info/hep/search-tips?ln=en
+# Use API via cocitedwith:1411459
 # todo: add docstrings
 # todo: maybe use a proper format to save the record data or at least allow ...
 # .... to export into such
