@@ -2,7 +2,12 @@ import time
 import urllib.request
 import socket
 import re
-from .log import logger
+import json
+# from .log import logger
+# import pyinspire.pyinspire
+
+import logging
+logger = logging.getLogger("test")
 
 """ Part of inspiderweb: Tool to analyze paper reference networks.
 Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
@@ -203,15 +208,39 @@ class Record(object):
         if self.references_dl and not force:
             logger.debug("Skipping downloading of references.")
             return False
-        record_regex = re.compile("/record/([0-9]*)")
-        logger.debug("Downloading references of {}".format(self.mid))
-        reference_html = download(self.inspire_url + "/references")
-        if not reference_html:
-            return False
-        records = record_regex.findall(reference_html)
-        records = [record for record in records if not record == self.mid]
-        logger.debug("{} is citing {} records".format(self.mid, len(records)))
-        self.references.update(records)
+        search_string = self.bibkey
+        # fixme: we will only get junks, so we have to loop
+        api_string = "http://inspirehep.net/search?p={p}&of={of}&ot={ot}".format(
+            p="refersto:recid:566620",
+            of="recjson",
+            ot="recid,system_control_number")
+        # result = download(api_string)
+        result = download(api_string)
+        pyob = json.loads(result)
+        # fixme: Probably all of those download methods should actually be moved to the db class, as they get information about mutliple records!
+        for record in pyob:
+            # print(record)
+            recid = record['recid']
+            bibkey = ""
+            arxiv_code = ""
+            if not isinstance(record['system_control_number'], list):
+                # if there is only one value here, than this is not a list
+                # and in this case the only value supplied should be the
+                # bibtex key
+                system = record['system_control_number']
+                assert system["institute"] in ['INSPIRETeX', 'SPIRESTeX']
+                bibkey = system["value"]
+            else:
+                for system in record['system_control_number']:
+                    if system["institute"] == 'arXiv':
+                        arxiv_code = system["value"]
+                    if system["institute"] in ['INSPIRETeX', 'SPIRESTeX']:
+                        if bibkey:
+                            # we already met a bibkey
+                            assert bibkey ==  system["value"]
+                        else:
+                            bibkey = system["value"]
+                self.references.add(recid)
         self.references_dl = True
         return True
 
@@ -220,3 +249,7 @@ class Record(object):
 
     def __repr__(self):
         return self.__str__()
+
+if __name__ == "__main__":
+    r = Record("566620")
+    r.get_references()

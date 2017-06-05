@@ -1,4 +1,4 @@
-# InspiderWeb [![Build Status](https://travis-ci.org/klieret/python-colorlog.svg?branch=master)](https://travis-ci.org/klieret/inspiderweb)
+# InspiderWeb: API DEV Version - check out master branch for working project
 [Features](#features) | [Screenshots](#screenshots) | [How does it work?](#how-does-it-work) | [Limitations/Bugs](#limitationsbugs) | [Installation](#installation) | [Usage](#usage) | [Tutorial](#tutorial) | [License](#license)
 
 This is a tool to analyze networks papers referencing and citing each other. It acts as a web-crawler, extracting information from [inspirehep](http://inspirehep.net/), then uses the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) to describe the network. The result can then be plotted by the [Graphviz Package](http://www.graphviz.org/) and similar programs.
