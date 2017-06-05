@@ -3,21 +3,18 @@ import urllib.request
 import socket
 import re
 import json
-# from .log import logger
+from .log import logger
 # import pyinspire.pyinspire
 
-import logging
-logger = logging.getLogger("test")
+# import logging
+# logger = logging.getLogger("test")
 
 """ Part of inspiderweb: Tool to analyze paper reference networks.
 Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
 
-This file defines the Record class which describes one paper/record from
-inspirehep.
+This file defines the Record class which collects the necessary information
+we need from one record/one paper on inspirehep.
 """
-
-
-
 
 
 class Record(object):
@@ -26,7 +23,7 @@ class Record(object):
     """
     def __init__(self, recid, label=None):
         self.inspire_url = "http://inspirehep.net/record/{}".format(recid)
-        self.fulltext_url = "" # fixme: add to sync
+        self.fulltext_url = "" # fixme: add to sync/merge
         self.custom_label = label
         self.bibkey = ""
         self.recid = recid
@@ -165,7 +162,3 @@ class Record(object):
 
     def __repr__(self):
         return self.__str__()
-
-if __name__ == "__main__":
-    r = Record("566620")
-    r.get_references()

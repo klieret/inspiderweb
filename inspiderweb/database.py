@@ -229,28 +229,45 @@ class Database(object):
 
     def get_references(self, recid, force=False) -> bool:
         """ Download references from inspirehep.
-
         """
         record = self.get_record(recid)
         if record.references_dl and not force:
             logger.debug("Skipping downloading of references.")
             return False
+        # fixme: those are actually citations
         search_string = "refersto:recid:{}".format(record.recid)
-        recids = self.get_inspire_info(search_string)
+        recids = self.get_recids_from_search(search_string)
         record.references.update(recids)
         self.update_record(recid, record)
         record.references_dl = True
         return True
 
-    def get_inspire_info(self, searchstring):
+    def get_recids_from_search(self, searchstring, record_group=25):
+        # Long responses are split into chunks of $record_group records
+        # so we need an additional loop.
+        record_offset = 0
+        recids = set()
+        while True:
+            new_recids = self.get_recids_from_search_chunk(
+                searchstring, record_group, record_offset)
+            recids.update(new_recids)
+            if len(new_recids) < record_group:
+                break
+            record_offset += record_group
+        print(recids)
+        return recids
+
+    def get_recids_from_search_chunk(self, searchstring, record_group, record_offset):
         """ Returns a list of the recids of all results found, while updating
         the db with pieces of information found on the way.
         """
         # fixme: we will only get junks, so we have to loop
-        api_string = "http://inspirehep.net/search?p={p}&of={of}&ot={ot}".format(
+        api_string = "http://inspirehep.net/search?p={p}&of={of}&ot={ot}&rg={rg}&jrec={jrec}".format(
             p=searchstring,
             of="recjson",
-            ot="recid,system_control_number")
+            ot="recid,system_control_number",
+            rg=record_group,
+            jrec=record_offset)
         # result = download(api_string)
         result = download(api_string)
         pyob = json.loads(result)
@@ -258,7 +275,7 @@ class Database(object):
         for record in pyob:
             # print(record)
             recid = record['recid']
-            bibey = ""
+            bibkey = ""
             arxiv_code = ""
             if not isinstance(record['system_control_number'], list):
                 # if there is only one value here, than this is not a list
@@ -266,23 +283,26 @@ class Database(object):
                 # bibtex key
                 system = record['system_control_number']
                 assert system["institute"] in ['INSPIRETeX', 'SPIRESTeX']
-                bibey = system["value"]
+                bibkey = system["value"]
             else:
+                # we have a list and go through it to pick out relevant
+                # information
                 for system in record['system_control_number']:
                     if system["institute"] == 'arXiv':
                         arxiv_code = system["value"]
                     if system["institute"] in ['INSPIRETeX', 'SPIRESTeX']:
-                        if bibey:
+                        if bibkey:
                             # we already met a bibkey
-                            assert bibey ==  system["value"]
+                            assert bibkey == system["value"]
                         else:
-                            bibey = system["value"]
+                            bibkey = system["value"]
+            # fixme: use merge instead
             recids.add(recid)
             record = self.get_record(recid)
             if record.bibkey:
-                assert record.bibkey == bibey
+                assert record.bibkey == bibkey
             else:
-                record.bibkey = bibey
+                record.bibkey = bibkey
             # don't want to make lists of fulltext_urls, so let's just
             # take this one
             # fixme: this is not yet the real arxiv url
