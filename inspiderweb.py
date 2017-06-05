@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime
-from inspiderweb.log import logger
+from inspiderweb.log import logger, logcontrol
 from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
 import sys
@@ -85,8 +85,14 @@ misc_options.add_argument("--maxseeds", required=False, type=int,
 misc_options.add_argument("--forceupdate", action="store_true",
                           help="For all information that we get from the "
                                "database: Force redownload")
+misc_options.add_argument("-v" "--verbosity", required=False, type=str,
+                          help="Verbosity",
+                          choices=["debug", "info", "warning", "error",
+                                   "critical"],
+                          default="info", dest="verbosity")
 
 args = parser.parse_args()
+logcontrol.set_verbosity_from_argparse(args.verbosity)
 
 if args.plot and not args.seeds:
     logger.error("We need seeds to plot. Exiting.")
@@ -98,12 +104,6 @@ if args.updateseeds and not args.seeds:
     logger.error("We need seeds to update seeds. Exiting.")
     sys.exit(30)
 
-# todo: Use API instead of parsing. But I don't see where there is a clear ...
-# ...link to cited documents....
-# via citedby:recid:1471118
-# Use API via refersto:recid:1471118 etc. to get refernces NOTE: WE CAN EVEN NEST THOSE! http://inspirehep.net/info/hep/search-tips?ln=en
-# Use API via cocitedwith:1411459
-# todo: add docstrings
 # todo: maybe use a proper format to save the record data or at least allow ...
 # .... to export into such
 # todo: add clusters
