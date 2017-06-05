@@ -14,6 +14,7 @@ Currently hosted at: https://github.com/klieret/inspiderweb
 Run this file via `python3 inspiderweb.py --help` for instructions on
 usage. """
 
+# todo: move that to another file so that this file stays easily modifyable etc.
 description = r"""
     INSPIDERWEB
  `.,-'\_____/`-.,'     Tool to analyze networks papers referencing and citing each
@@ -30,7 +31,7 @@ description = r"""
 
 # Use the RawTextHelpFormatter in order to allow linebreaks in the description
 parser = argparse.ArgumentParser(description=description,
-                                 prog="inspiderweb.py",
+                                 prog="python3 inspiderweb.py",
                                  formatter_class=RawDescriptionHelpFormatter,
                                  add_help=False)
 
@@ -40,7 +41,6 @@ action_options = parser.add_argument_group('Action Options',
                                            'What do you want to do?')
 misc_options = parser.add_argument_group('Misc', 'Misc Options')
 
-# todo: update tutorial
 setup_options.add_argument("-d", "--database", required=True,
                            help="Pickle database (db) file. Multiple db files "
                                 "are supported. In this case the first one "
@@ -51,7 +51,6 @@ setup_options.add_argument("-o", "--output", required=False,
                            help="Output dot file.",
                            type=str)
 
-# todo: update tutorial
 setup_options.add_argument("-s", "--seeds", required=False,
                            help="Input seed file. Multiple seed files are "
                                 "supported.",
@@ -61,13 +60,11 @@ action_options.add_argument("-p", "--plot", required=False,
                             action="store_true",
                             help="Generate dot output (i.e. plot).",
                             default=False)
-# fixme: update tutorial
 action_options.add_argument("-u", "--updateseeds", required=False,
                             help="Get specified information for the seeds. "
                                  "records Multiple arguments are supported. ",
                             type=str, default="", nargs="+",
                             choices=["refs", "cites", "bib"])
-# fixme: update tutorial
 action_options.add_argument("-t", "--updatedb", required=False,
                             help="Get specified information for the records in"
                                  " the database. "

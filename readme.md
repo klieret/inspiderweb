@@ -78,9 +78,12 @@ The ```graphviz``` package provides several nice tools that can be used.
 
 All command line options are described in the help message: Run ```python3 inspiderweb.py --help``` to get:
 ```
-usage: inspiderweb.py -d DATABASE [-o OUTPUT] [-s SEEDS] [-p] [-u UPDATESEEDS]
-                      [-t UPDATEDB] [-h] [--rank RANK] [--maxseeds MAXSEEDS]
-                      [--forceupdate]
+usage: python3 inspiderweb.py -d DATABASE [DATABASE ...] [-o OUTPUT]
+                              [-s SEEDS [SEEDS ...]] [-p]
+                              [-u {refs,cites,bib} [{refs,cites,bib} ...]]
+                              [-t {refs,cites,bib} [{refs,cites,bib} ...]]
+                              [-h] [--rank {year}] [--maxseeds MAXSEEDS]
+                              [--forceupdate]
 
     INSPIDERWEB
  `.,-'\_____/`-.,'     Tool to analyze networks papers referencing and citing each
@@ -88,53 +91,57 @@ usage: inspiderweb.py -d DATABASE [-o OUTPUT] [-s SEEDS] [-p] [-u UPDATESEEDS]
  /  /`.,' `.,'\  \     inspirehep, then uses the dot languageto describe the
 /__/__/     \__\__\__  network. The result can then be plotted by the graphviz
 \  \  \     /  /  /    Package and similar programs.
- \  \,'`._,'`./  /     More info on the github page.
-  \,'`./___\,'`./
+ \  \,'`._,'`./  /     More info on the github page
+  \,'`./___\,'`./      https://github.com/klieret/inspiderweb
  ,'`-./_____\,-'`.
      /       \
-    
 
 Setup/Configure Options:
   Supply in/output paths...
 
-  -d DATABASE, --database DATABASE
-                        Required: Pickle database file.
+  -d DATABASE [DATABASE ...], --database DATABASE [DATABASE ...]
+                        Pickle database (db) file. Multiple db files are
+                        supported. In this case the first one will be used to
+                        save the resulting merged db
   -o OUTPUT, --output OUTPUT
                         Output dot file.
-  -s SEEDS, --seeds SEEDS
-                        Input seed file.
+  -s SEEDS [SEEDS ...], --seeds SEEDS [SEEDS ...]
+                        Input seed file. Multiple seed files are supported.
 
 Action Options:
   What do you want to do?
 
   -p, --plot            Generate dot output (i.e. plot).
-  -u UPDATESEEDS, --updateseeds UPDATESEEDS
-                        Update seeds with the following information: '[bib],[cites],[refs]'
-  -t UPDATEDB, --updatedb UPDATEDB
-                        Update db with the following information: '[bib],[cites],[refs]'
+  -u {refs,cites,bib} [{refs,cites,bib} ...], --updateseeds {refs,cites,bib} [{refs,cites,bib} ...]
+                        Get specified information for the seeds. records
+                        Multiple arguments are supported.
+  -t {refs,cites,bib} [{refs,cites,bib} ...], --updatedb {refs,cites,bib} [{refs,cites,bib} ...]
+                        Get specified information for the records in the
+                        database. Multiple arguments are supported.
 
 Misc:
   Misc Options
 
-  -h, --help            Print help message
-  --rank RANK           Rank by [year]
+  -h, --help            Print this help message.
+  --rank {year}         Rank by [year]
   --maxseeds MAXSEEDS   Maximum number of seeds (for testing purposes).
-  --forceupdate         For all information that we get from the database: Force redownload
+  --forceupdate         For all information that we get from the database:
+                        Force redownload
 ```
 
 ## Tutorial
 
-In the following I will always give two lines, the second with the shortcut options, the first one with the longer (and easier to understand options). Instead of ```./inspiderweb.py```, you can also use ```python3 inspiderweb.py``` (which might be the better alternative on non-linux os). Note that paths that contain spaces must be enclosed in quotation marks.
+In the following I will always give two lines, the second with the shortcut options, the first one with the longer (and easier to understand options). Instead of ```python3 inspiderweb.py```, you can also use ```python3 inspiderweb.py``` linux (after setting the ```x``` privilege). Note that paths that contain spaces must be enclosed in quotation marks.
 
 Displaying the help:
 
-    ./inspiderweb.py --help
-    ./inspiderweb.py --h
+    python3 inspiderweb.py --help
+    python3 inspiderweb.py --h
     
 Printing statistics about our database (will always be printed if we run the program). It will only be created, so it will look pretty bleak. Of course you can supply your own name for the database, here it's ```test.pickle``` (in the ```db``` folder).
 
-    ./inspiderweb.py --database db/test.pickle
-    ./inspiderweb.py -d db/test.pickle
+    python3 inspiderweb.py --database db/test.pickle
+    python3 inspiderweb.py -d db/test.pickle
 
 Output:
 
@@ -147,8 +154,8 @@ Output:
 
 Add a few seeds (the ids of inspirehep, i.e. the number ```811388``` from ```http://inspirehep.net/record/811388/```) and download the bibinfo and the references. For this we use the example file in ```seeds/example_small.txt```.
 
-    ./inspiderweb.py --database db/test.pickle --seeds seeds/example_small.txt --updateseeds bib refs
-    ./inspiderweb.py -d db/test.pickle -s seeds/example_small.txt -u bib refs
+    python3 inspiderweb.py --database db/test.pickle --seeds seeds/example_small.txt --updateseeds bib refs
+    python3 inspiderweb.py -d db/test.pickle -s seeds/example_small.txt -u bib refs
    
 This can take some time (around 40s, mainly because the script waits quite often to not overload the inspirehep server), while we see output like: 
 
@@ -180,8 +187,8 @@ Afterwards, if we run the statistics again, we could see that we were successful
 
 Now we are ready to plot the relations between these nodes:
 
-    ./inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --output build/test.dot
-    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o build/test.dot
+    python3 inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --output build/test.dot
+    python3 inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o build/test.dot
 
 This will produce the file ```build/test.dot``` (I chose to place all of the output files in the ```build``` repository as to not make the repository dirty):
 
@@ -220,8 +227,8 @@ This will produce the file ```build/test.dot``` (I chose to place all of the out
 
 Note that we could also have done all of the above with just one command:
 
-    ./inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --updateseeds bib refs --output build/test.dot
-    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -u bib refs -o build/test.dot
+    python3 inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --updateseeds bib refs --output build/test.dot
+    python3 inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -u bib refs -o build/test.dot
 
 Note that running this should (basically) run straight through, without downloading anything, as all the information was saved in the database: This gives output like
 
@@ -255,7 +262,7 @@ To get ```.pdf``` output with clickable nodes, we cannot use ```-Tpdf``` however
 
 To get the graph sorted by years, simply supply the ```--rank year``` option. Doing all of this in one line (connecting different commands with ```&&```):
 
-    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o build/test.dot && dot -Tps2 build/test.dot > build/test.ps && ps2pdf build/test.ps build/test.pdf 
+    python3 inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o build/test.dot && dot -Tps2 build/test.dot > build/test.ps && ps2pdf build/test.ps build/test.pdf 
 
 ![tutorial year picture](https://github.com/klieret/readme-files/blob/master/inspiderweb/tutorial_year.png)
 
