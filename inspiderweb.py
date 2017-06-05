@@ -133,7 +133,7 @@ for seedfile in args.seeds:
     logger.info("Read {} seeds from file(s) {}.".format(len(seeds),
                                                         ', '.join(args.seeds)))
 
-db.autocomplete_records(args.updateseeds, force=args.forceupdate, mids=seeds)
+db.autocomplete_records(args.updateseeds, force=args.forceupdate, recids=seeds)
 db.autocomplete_records(args.updatedb, force=args.forceupdate)
 
 if args.plot:
