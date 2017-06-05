@@ -21,7 +21,7 @@ class Database(object):
     Record objects (that hold information of a record/paper from inspirehep)
     plus some methods to update/save/cache information.
     The records are collected in self._records, a dictionary of the form
-    mid: record, where record is a Record object and mid is the inspirehep
+    recid: record, where record is a Record object and recid is the inspirehep
     id, i.e. the number 566620 for the record inspirehep.net/record/566620/.
     """
     def __init__(self, backup_path):
@@ -33,13 +33,13 @@ class Database(object):
         logger.info(" database statistics ".upper().center(50, "*"))
         logger.info("Current number of records: {}".format(len(self._records)))
         logger.info("Current number of records with references: {}".format(
-            sum([int(r.references_dl) for mid, r in self._records.items()])))
+            sum([int(r.references_dl) for recid, r in self._records.items()])))
         logger.info("Current number of records with citations: {}".format(
-            sum([int(r.citations_dl) for mid, r in self._records.items()])))
+            sum([int(r.citations_dl) for recid, r in self._records.items()])))
         logger.info("Current number of records with cocitations: {}".format(
-            sum([int(r.cocitations_dl) for mid, r in self._records.items()])))
+            sum([int(r.cocitations_dl) for recid, r in self._records.items()])))
         logger.info("Current number of records with bibkey: {}".format(
-            sum([int(bool(r.bibkey)) for mid, r in self._records.items()])
+            sum([int(bool(r.bibkey)) for recid, r in self._records.items()])
         ))
         logger.info("*"*50)
 
@@ -58,11 +58,11 @@ class Database(object):
         if not os.path.exists(path):
             logger.warning("Could not load db from file.")
             return False
-        for mid, their_record in pickle.load(open(path, "rb")).items():
-            assert mid == their_record.mid
-            my_record = self.get_record(mid)
+        for recid, their_record in pickle.load(open(path, "rb")).items():
+            assert recid == their_record.recid
+            my_record = self.get_record(recid)
             my_record.merge(their_record)
-            self.update_record(mid, my_record)
+            self.update_record(recid, my_record)
         logger.debug("Successfully loaded db from {}".format(path))
         return True
 
@@ -76,7 +76,7 @@ class Database(object):
         logger.debug("Successfully saved db to {}".format(path))
 
     def autocomplete_records(self, updates: List, force=False, save_every=5,
-                             mids=None, statistics_every=5) -> bool:
+                             recids=None, statistics_every=5) -> bool:
         """ Download information for each record from inspirehep.
 
         Args:
@@ -87,7 +87,7 @@ class Database(object):
                             "cites" (citations and cocitations of th erecord)
             force (bool): Force redownload of information
             save_every (int): Save database after this many completed records
-            mids (list): Only download information for records with id (mid) in
+            recids (list): Only download information for records with id (recid) in
                          this list.
             statistics_every(int): Print statistics after this many downloaded
                                    items.
@@ -105,13 +105,13 @@ class Database(object):
         if not updates:
             return
 
-        if not mids:
-            mids = self._records.keys()
+        if not recids:
+            recids = self._records.keys()
 
         logger.debug("Downloading {} for {} records.".format(
-            ', '.join(updates), len(mids)))
+            ', '.join(updates), len(recids)))
 
-        for i, mid in enumerate(mids):
+        for i, recid in enumerate(recids):
             if i and i % save_every == 0:
                 self.save()
             if i and i % statistics_every == 0:
@@ -119,7 +119,7 @@ class Database(object):
                 logger.debug("Sleeping a bit longer.")
                 time.sleep(15)
 
-            record = self.get_record(mid)
+            record = self.get_record(recid)
 
             if "bib" in updates:
                 record.get_info(force=force)
@@ -128,23 +128,23 @@ class Database(object):
             if "cites" in updates:
                 record.get_citations(force=force)
 
-            self.update_record(mid, record)
+            self.update_record(recid, record)
 
         return True
 
-    def get_record(self, mid):
-        """ Return record with id $mid from database. Record will be created
+    def get_record(self, recid):
+        """ Return record with id $recid from database. Record will be created
         if it was not in the database before.
         """
 
-        if mid in self._records:
-            return self._records[mid]
+        if recid in self._records:
+            return self._records[recid]
         else:
-            return Record(mid)
+            return Record(recid)
 
-    def update_record(self, mid, record):
-        """ Update record with id $mid with record $record. """
-        self._records[mid] = record
+    def update_record(self, recid, record):
+        """ Update record with id $recid with record $record. """
+        self._records[recid] = record
 
     def load_labels_from_file(self,
                               path: str,
@@ -159,7 +159,7 @@ class Database(object):
             delimiter_char: Delimiter of csv file [;]
             comment_char: Ignore lines starting with this [#]
             label_column: Column with the label [0]
-            id_column: Column with the mid [1]
+            id_column: Column with the recid [1]
         """
         logger.info("Loading labels from {}".format(path))
         with open(path, "r") as inspire_links:
@@ -175,11 +175,11 @@ class Database(object):
                     continue
 
                 try:
-                    mid = re.search("[0-9]+", row[id_column].strip()).group(0)
+                    recid = re.search("[0-9]+", row[id_column].strip()).group(0)
                 except AttributeError or KeyError:
                     continue
 
-                record = self.get_record(mid)
-                record.label = label
-                self.update_record(mid, record)
+                record = self.get_record(recid)
+                record.custom_label = label
+                self.update_record(recid, record)
         logger.debug("Finished adding records.")

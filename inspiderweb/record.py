@@ -60,17 +60,17 @@ class Record(object):
     """ Instances of the record class describe one paper/record from
     inspirehep.
     """
-    def __init__(self, mid, label=None):
-        self.inspire_url = "http://inspirehep.net/record/{}".format(mid)
-        self._label = label
+    def __init__(self, recid, label=None):
+        self.inspire_url = "http://inspirehep.net/record/{}".format(recid)
+        self.custom_label = label
         self.bibkey = ""
-        self.mid = mid
-        self.references_dl = False
+        self.recid = recid
         self.references = set([])
-        self.citations_dl = False
         self.citations = set([])
-        self.cocitations_dl = False
         self.cocitations = set([])
+        self.references_dl = False
+        self.citations_dl = False
+        self.cocitations_dl = False
 
     def merge(self, other) -> None:
         """ Merge this record with another Record
@@ -85,7 +85,7 @@ class Record(object):
             assert self.bibkey == other.bibkey
         if not self.bibkey:
             self.bibkey = other.bibkey
-        assert self.mid == other.mid
+        assert self.recid == other.recid
 
         self.references.update(other.references)
         self.citations.update(other.citations)
@@ -95,8 +95,8 @@ class Record(object):
         self.citations_dl |= other.citations_dl
         self.cocitations_dl |= other.cocitations_dl
 
-        if not self._label:
-            self._label = other.label
+        if not self.custom_label:
+            self.custom_label = other.label
 
     # fixme: Rather separate that from self._label so that we can combine ...
     # bibkey and label
@@ -104,13 +104,9 @@ class Record(object):
     def label(self):
         if self.bibkey:
             return self.bibkey
-        if self._label:
-            return self._label
+        if self.custom_label:
+            return self.custom_label
         return self.inspire_url.split("/")[-1]
-
-    @label.setter
-    def label(self, label):
-        self._label = label
 
     def is_complete(self) -> bool:
         """ Did we download all the information that we can download?"""
@@ -146,12 +142,12 @@ class Record(object):
             logger.debug("Skipping downloading of info.")
             return False
         bibkey_regex = re.compile(r"@\w*\{([^,]*),")
-        logger.debug("Downloading bibfile of {}".format(self.mid))
+        logger.debug("Downloading bibfile of {}".format(self.recid))
         bib_entry = download(self.inspire_url + "/export/hx")
         if not bib_entry:
             return False
         bibkey = bibkey_regex.search(bib_entry).group(1)
-        logger.debug("Bibkey of {} is {}".format(self.mid, bibkey))
+        logger.debug("Bibkey of {} is {}".format(self.recid, bibkey))
         self.bibkey = bibkey
         return True
 
@@ -170,7 +166,7 @@ class Record(object):
             logger.debug("Skipping downloading of citations.")
             return False
         record_regex = re.compile("/record/([0-9]*)")
-        logger.debug("Downloading citations of {}".format(self.mid))
+        logger.debug("Downloading citations of {}".format(self.recid))
         citations_html = download(self.inspire_url + "/citations")
         if not citations_html:
             return False
@@ -185,11 +181,11 @@ class Record(object):
                 citations += record_regex.findall(line)
             else:
                 cocitations += record_regex.findall(line)
-        citations = [record for record in citations if not record == self.mid]
+        citations = [record for record in citations if not record == self.recid]
         logger.debug("{} is cited by {} records".format(
-            self.mid, len(citations)))
+            self.recid, len(citations)))
         logger.debug("{} is co-cited with {} records".format(
-            self.mid, len(cocitations)))
+            self.recid, len(cocitations)))
 
         self.citations.update(citations)
         self.cocitations.update(cocitations)
@@ -245,7 +241,7 @@ class Record(object):
         return True
 
     def __str__(self):
-        return "R({})".format(self.mid)
+        return "R({})".format(self.recid)
 
     def __repr__(self):
         return self.__str__()

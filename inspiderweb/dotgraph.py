@@ -21,34 +21,34 @@ class DotGraph(object):
         self._dot_str = ""
         self._all_node_ids = set([])
         self._node_styles = {}
-        self._clusters = {}  # clusterlabel: (set of mids, style)
+        self._clusters = {}  # clusterlabel: (set of recids, style)
         self._connections = set([])
         self._style = ""
 
-    def add_node(self, mid, style=""):
-        self._node_styles[mid] = style
+    def add_node(self, recid, style=""):
+        self._node_styles[recid] = style
 
-    def add_connection(self, from_mid: str, to_mid: str) -> None:
+    def add_connection(self, from_recid: str, to_recid: str) -> None:
         """ Adds connection between two nodes.
 
         Args:
-            from_mid: mid of the record that is referencing
-            to_mid: mid of the record that is being referenced
+            from_recid: recid of the record that is referencing
+            to_recid: recid of the record that is being referenced
         """
-        self._connections.add((from_mid, to_mid))
+        self._connections.add((from_recid, to_recid))
 
-    def add_cluster(self, mids: set, cluster_id: str, style: str):
+    def add_cluster(self, recids: set, cluster_id: str, style: str):
         """ Add a cluster.
 
         Args:
-            mids: Set (!) of mids for each member of the cluster
+            recids: Set (!) of recids for each member of the cluster
             cluster_id: Id for cluster. Must be unique, otherwise arbitrary.
             style: String to style the cluster
         """
-        self._clusters[cluster_id] = (mids, style)
+        self._clusters[cluster_id] = (recids, style)
 
-    def add_cluster_node(self, cluster_id: str, mid: str):
-        self._clusters[cluster_id][0].add(mid)
+    def add_cluster_node(self, cluster_id: str, recid: str):
+        self._clusters[cluster_id][0].add(recid)
 
     def return_dot_str(self) -> str:
         """ Return the string of dot language that describes the graph. """
@@ -115,8 +115,8 @@ class DotGraph(object):
                 #                  "\tstyle=\"filled\";\n"
                 #                  "\tfillcolor=\"gray97\";\n")
                 # self._dot_str += '\tlabel="{}";\n'.format(cluster)
-                for mid in cluster[0]:
-                    self._dot_str += '\t\t"{};\n'.format(mid)
+                for recid in cluster[0]:
+                    self._dot_str += '\t\t"{};\n'.format(recid)
                 self._dot_str += "\t}\n"
 
     def _draw_nodes(self) -> None:
@@ -130,8 +130,8 @@ class DotGraph(object):
                     self.db.get_record(node_id).label,
                     self.db.get_record(node_id).inspire_url)
 
-        for mid, style in self._node_styles.items():
-            self._dot_str += '\t"{}" [{}];\n'.format(mid, style)
+        for recid, style in self._node_styles.items():
+            self._dot_str += '\t"{}" [{}];\n'.format(recid, style)
 
     def _draw_connections(self) -> None:
         """ Add the connections to the dot strings.
