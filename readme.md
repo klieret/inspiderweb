@@ -147,8 +147,8 @@ Output:
 
 Add a few seeds (the ids of inspirehep, i.e. the number ```811388``` from ```http://inspirehep.net/record/811388/```) and download the bibinfo and the references. For this we use the example file in ```seeds/example_small.txt```.
 
-    ./inspiderweb.py --database db/test.pickle --seeds seeds/example_small.txt --updateseeds bib,refs
-    ./inspiderweb.py -d db/test.pickle -s seeds/example_small.txt -u bib,refs
+    ./inspiderweb.py --database db/test.pickle --seeds seeds/example_small.txt --updateseeds bib refs
+    ./inspiderweb.py -d db/test.pickle -s seeds/example_small.txt -u bib refs
    
 This can take some time (around 40s, mainly because the script waits quite often to not overload the inspirehep server), while we see output like: 
 
@@ -220,8 +220,8 @@ This will produce the file ```build/test.dot``` (I chose to place all of the out
 
 Note that we could also have done all of the above with just one command:
 
-    ./inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --updateseeds bib,refs --output build/test.dot
-    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -u bib,refs -o build/test.dot
+    ./inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --updateseeds bib refs --output build/test.dot
+    ./inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -u bib refs -o build/test.dot
 
 Note that running this should (basically) run straight through, without downloading anything, as all the information was saved in the database: This gives output like
 

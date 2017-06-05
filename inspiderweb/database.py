@@ -5,6 +5,7 @@ import os.path
 import re
 import time
 from .log import logger
+from typing import List
 
 """ Part of inspiderweb: Tool to analyze paper reference networks.
 Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
@@ -74,42 +75,67 @@ class Database(object):
         pickle.dump(self._records, open(path, "wb"))
         logger.debug("Successfully saved db to {}".format(path))
 
-    def autocomplete_records(self, force=False, save_every=5,
-                             info=True,
-                             references=True,
-                             citations=True):
+    def autocomplete_records(self, updates: List, force=False, save_every=5,
+                             mids=None, statistics_every=5) -> bool:
         """ Download information for each record from inspirehep.
 
         Args:
-            force: Force redownload.
-            save_every: Save database after $save_every completed records
-            info: Download bibtext?
-            references: Download references?
-            citations: Download citations?
+            updates (list): What information should be downloaded.
+                            Options are
+                            "bib" (bibtex, in particular the bibkey),
+                            "refs" (references of the record),
+                            "cites" (citations and cocitations of th erecord)
+            force (bool): Force redownload of information
+            save_every (int): Save database after this many completed records
+            mids (list): Only download information for records with id (mid) in
+                         this list.
+            statistics_every(int): Print statistics after this many downloaded
+                                   items.
+
+        Returns: True if we actually did something.
         """
 
-        i = 0
-        for mid, record in self._records.items():
-            i += 1
-            if i % save_every == 0:
+        for update in updates:
+            if not update in ["bib", "refs", "cites"]:
+                logger.error("Unrecognize update option {}. "
+                             "I will simply ignore this for "
+                             "now.".format(update))
+                updates.remove(update)
+
+        if not updates:
+            return
+
+        if not mids:
+            mids = self._records.keys()
+
+        logger.debug("Downloading {} for {} records.".format(
+            ', '.join(updates), len(mids)))
+
+        for i, mid in enumerate(mids):
+            if i and i % save_every == 0:
                 self.save()
-            if i % 10 == 0:
+            if i and i % statistics_every == 0:
                 self.statistics()
                 logger.debug("Sleeping a bit longer.")
                 time.sleep(15)
 
-            if info:
+            record = self.get_record(mid)
+
+            if "bib" in updates:
                 record.get_info(force=force)
-            if references:
+            if "refs" in updates:
                 record.get_references(force=force)
-            if citations:
+            if "cites" in updates:
                 record.get_citations(force=force)
 
             self.update_record(mid, record)
 
+        return True
+
     def get_record(self, mid):
         """ Return record with id $mid from database. Record will be created
-        if it was not in the database before. """
+        if it was not in the database before.
+        """
 
         if mid in self._records:
             return self._records[mid]

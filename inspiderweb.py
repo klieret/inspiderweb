@@ -40,31 +40,45 @@ action_options = parser.add_argument_group('Action Options',
                                            'What do you want to do?')
 misc_options = parser.add_argument_group('Misc', 'Misc Options')
 
+# todo: update tutorial
 setup_options.add_argument("-d", "--database", required=True,
-                           help="Required: Pickle database file.",
-                           type=str)
+                           help="Pickle database (db) file. Multiple db files "
+                                "are supported. In this case the first one "
+                                "will be used to save the resulting merged db",
+                           type=str, nargs="+")
+
 setup_options.add_argument("-o", "--output", required=False,
                            help="Output dot file.",
                            type=str)
+
+# todo: update tutorial
 setup_options.add_argument("-s", "--seeds", required=False,
-                           help="Input seed file.",
-                           type=str)
+                           help="Input seed file. Multiple seed files are "
+                                "supported.",
+                           type=str, nargs="+", default=[])
 
 action_options.add_argument("-p", "--plot", required=False,
                             action="store_true",
                             help="Generate dot output (i.e. plot).",
                             default=False)
+# fixme: update tutorial
 action_options.add_argument("-u", "--updateseeds", required=False,
-                            help="Get the following information for the seeds:"
-                                 "'[bib],[cites],[refs]'",
-                            type=str, default="")
+                            help="Get specified information for the seeds "
+                                 "records Multiple arguments are supported. "
+                                 "See 'usage' for the allowed arguments. ",
+                            type=str, default="", nargs="+",
+                            choices=["refs", "cites", "bib"])
+# fixme: update tutorial
 action_options.add_argument("-t", "--updatedb", required=False,
-                            help="Update db with the following information: "
-                                 "'[bib],[cites],[refs]'",
-                            type=str, default="")
+                            help="Get specified information for the records in"
+                                 " the database. "
+                                 "Multiple arguments are supported. "
+                                 "See 'usage' for the allowed arguments. ",
+                            type=str, default="", nargs="+",
+                            choices=["refs", "cites", "bib"])
 
 misc_options.add_argument("-h", "--help",
-                          help="Print help message", action="help")
+                          help="Print this help message.", action="help")
 misc_options.add_argument("--rank", required=False,
                           help="Rank by [year]", default="",
                           type=str,
@@ -96,15 +110,20 @@ if args.updateseeds and not args.seeds:
 # .... to export into such
 # todo: add clusters
 # todo: extract more infomration; add title as tooltip
+# todo: control verbosity
 
-db = Database(args.database)
+db = Database(args.database[0])
 db.load()
+
+for path in args.database[1:]:
+    db.load(path)
+
 db.statistics()
 
 seeds = []
-if args.seeds:
-    with open(args.seeds, "r") as seedfile:
-        for i, line in enumerate(seedfile):
+for seedfile in args.seeds:
+    with open(seedfile, "r") as seedfile_stream:
+        for i, line in enumerate(seedfile_stream):
             if (i + 1) == args.maxseeds:
                 # if args.maxseeds == 0 (default), this will never run
                 break
@@ -113,46 +132,11 @@ if args.seeds:
             if not line:
                 continue
             seeds.append(line)
-    logger.info("Read {} seeds from file {}.".format(len(seeds), args.seeds))
+    logger.info("Read {} seeds from file(s) {}.".format(len(seeds),
+                                                        ', '.join(args.seeds)))
 
-if args.updateseeds:
-    updates = args.updateseeds.split(',')
-    for update in updates:
-        if update not in ["bib", "cites", "refs"]:
-            logger.warning("Unrecognized information to get "
-                           "for seeds: {}".format(update))
-
-    # todo: this is basically a copy of what is being done in ...
-    # ... db.autocomplete_records... maybe join both?
-    saveevery = 5
-    for i, seed in enumerate(seeds):
-        if i % saveevery == 0:
-            db.save()
-        record = db.get_record(seed)
-        if "bib" in updates:
-            record.get_info(force=args.forceupdate)
-        if "cites" in updates:
-            record.get_citations(force=args.forceupdate)
-        if "refs" in updates:
-            record.get_references(force=args.forceupdate)
-        db.update_record(record.mid, record)
-
-        # add citations/references to db
-        for related in record.citations:
-            db.get_record(related)
-        for related in record.references:
-            db.get_record(related)
-
-if args.updatedb:
-    updates = args.updateseeds.split(',')
-    for update in updates:
-        if update not in ["bib", "cites", "refs"]:
-            logger.warning("Unrecognized information to get "
-                           "for seeds: {}".format(update))
-    db.autocomplete_records(force=args.forceupdate,
-                            info=("bib" in updates),
-                            references=("refs" in updates),
-                            citations=("cites" in updates))
+db.autocomplete_records(args.updateseeds, force=args.forceupdate, mids=seeds)
+db.autocomplete_records(args.updatedb, force=args.forceupdate)
 
 if args.plot:
 
@@ -160,6 +144,7 @@ if args.plot:
 
     # ALWAYS END EVERYTHING WITH A SEMICOLON
     # EXCEPT THINGS IN SQUARE BRACKETS: USE COMMA
+    # todo: move that to config or something
     graph_style = \
         "graph [label=\"inspiderweb {date} {time}\", fontsize=40];".format(
             date=str(datetime.date.today()),
