@@ -125,7 +125,8 @@ class Database(object):
         if recid in self._records:
             return self._records[recid]
         else:
-            return Record(recid)
+            self._records[recid] = Record(recid)
+            return self._records[recid]
 
     def update_record(self, recid, record):
         """ Update record with id $recid with record $record. """
