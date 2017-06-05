@@ -6,7 +6,7 @@ from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
 import sys
 import argparse
-from argparse import RawTextHelpFormatter
+from argparse import RawDescriptionHelpFormatter
 
 """ Main file of inspiderweb: Tool to analyze paper reference networks.
 Currently hosted at: https://github.com/klieret/inspiderweb
@@ -31,7 +31,7 @@ description = r"""
 # Use the RawTextHelpFormatter in order to allow linebreaks in the description
 parser = argparse.ArgumentParser(description=description,
                                  prog="inspiderweb.py",
-                                 formatter_class=RawTextHelpFormatter,
+                                 formatter_class=RawDescriptionHelpFormatter,
                                  add_help=False)
 
 setup_options = parser.add_argument_group('Setup/Configure Options',
@@ -63,17 +63,15 @@ action_options.add_argument("-p", "--plot", required=False,
                             default=False)
 # fixme: update tutorial
 action_options.add_argument("-u", "--updateseeds", required=False,
-                            help="Get specified information for the seeds "
-                                 "records Multiple arguments are supported. "
-                                 "See 'usage' for the allowed arguments. ",
+                            help="Get specified information for the seeds. "
+                                 "records Multiple arguments are supported. ",
                             type=str, default="", nargs="+",
                             choices=["refs", "cites", "bib"])
 # fixme: update tutorial
 action_options.add_argument("-t", "--updatedb", required=False,
                             help="Get specified information for the records in"
                                  " the database. "
-                                 "Multiple arguments are supported. "
-                                 "See 'usage' for the allowed arguments. ",
+                                 "Multiple arguments are supported. ",
                             type=str, default="", nargs="+",
                             choices=["refs", "cites", "bib"])
 
