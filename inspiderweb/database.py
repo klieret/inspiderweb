@@ -235,10 +235,10 @@ class Database(object):
         if record.references_dl and not force:
             logger.debug("Skipping downloading of references.")
             return False
-        search_string = record.recid
-
-        recids = self.get_inspire_info("refersto:recid:{}".format(record.recid))
+        search_string = "refersto:recid:{}".format(record.recid)
+        recids = self.get_inspire_info(search_string)
         record.references.update(recids)
+        self.update_record(recid, record)
         record.references_dl = True
         return True
 
