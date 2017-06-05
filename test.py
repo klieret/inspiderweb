@@ -6,6 +6,11 @@ from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
 import sys
 
-db = Database("db/test.pickle")
+db = Database("db/test2.pickle")
+db.load()
 
-db.get_recids_from_search("refersto:recid:566620")
+db.get_references("566620")
+db.get_citations("566620")
+
+
+db.save()

@@ -188,7 +188,6 @@ class Database(object):
 
         return True
 
-
     def load_labels_from_file(self,
                               path: str,
                               delimiter_char=";",
@@ -235,12 +234,50 @@ class Database(object):
             logger.debug("Skipping downloading of references.")
             return False
         # fixme: those are actually citations
-        search_string = "refersto:recid:{}".format(record.recid)
+        search_string = "citedby:recid:{}".format(record.recid)
         recids = self.get_recids_from_search(search_string)
+        logger.debug("{} is citing {} references.".format(recid, len(recids)))
         record.references.update(recids)
         self.update_record(recid, record)
         record.references_dl = True
         return True
+
+    def get_citations(self, recid, force=False) -> bool:
+        """ Download citations from inspirehep.
+        """
+        record = self.get_record(recid)
+        if record.citations_dl and not force:
+            logger.debug("Skipping downloading of citations.")
+            return False
+        search_string = "refersto:recid:{}".format(record.recid)
+        recids = self.get_recids_from_search(search_string)
+        logger.debug("{} is cited by {} records.".format(recid, len(recids)))
+        record.citations.update(recids)
+        self.update_record(recid, record)
+        record.citations_dl = True
+        return True
+
+    # fixme: somehow still doesn't work with recjson:
+    # http://inspirehep.net/search?p=cocitedwith:566620&of=h&rg=25&sc=0
+    # works perfectly fine but
+    # http://inspirehep.net/search?p=cocitedwith:566620&of=recjson&ot=recid&rg=25&sc=0
+    # only returns empty '[]'.
+    #
+    # def get_cocitations(self, recid, force=False) -> bool:
+    #     """ Download cocitations from inspirehep.
+    #     """
+    #     record = self.get_record(recid)
+    #     if record.cocitations_dl and not force:
+    #         logger.debug("Skipping downloading of citations.")
+    #         return False
+    #     search_string = "cocitedwith:{}".format(record.recid)
+    #     recids = self.get_recids_from_search(search_string)
+    #     logger.debug("{} is cocited with {} records.".format(recid,
+    #                                                          len(recids)))
+    #     record.cocitations.update(recids)
+    #     self.update_record(recid, record)
+    #     record.cocitations_dl = True
+    #     return True
 
     def get_recids_from_search(self, searchstring, record_group=25):
         # Long responses are split into chunks of $record_group records
@@ -251,9 +288,10 @@ class Database(object):
             new_recids = self.get_recids_from_search_chunk(
                 searchstring, record_group, record_offset)
             recids.update(new_recids)
+            print("recids from rg", record_offset, new_recids)
             if len(new_recids) < record_group:
                 break
-            record_offset += record_group
+            record_offset += record_group -1
         print(recids)
         return recids
 
@@ -261,13 +299,12 @@ class Database(object):
         """ Returns a list of the recids of all results found, while updating
         the db with pieces of information found on the way.
         """
-        # fixme: we will only get junks, so we have to loop
         api_string = "http://inspirehep.net/search?p={p}&of={of}&ot={ot}&rg={rg}&jrec={jrec}".format(
-            p=searchstring,
-            of="recjson",
-            ot="recid,system_control_number",
-            rg=record_group,
-            jrec=record_offset)
+            p=searchstring,  # search query
+            of="recjson",  # output format
+            ot="recid,system_control_number",  # output tags
+            rg=record_group,  # how many results/records (default 25)
+            jrec=record_offset)  # result offset
         # result = download(api_string)
         result = download(api_string)
         pyob = json.loads(result)
@@ -303,9 +340,10 @@ class Database(object):
                 assert record.bibkey == bibkey
             else:
                 record.bibkey = bibkey
-            # don't want to make lists of fulltext_urls, so let's just
-            # take this one
-            # fixme: this is not yet the real arxiv url
-            record.fulltext_url = arxiv_code
+            if not record.fulltext_url and arxiv_code:
+                # The arxiv url looks like: oai:arXiv.org:1701.02937
+                # or oai:arXiv.org:hep-ph/0208013
+                arxiv_url = "http://arxiv.org/pdf/" + arxiv_code.split(':')[-1]
+                record.fulltext_url = arxiv_url
             self.update_record(recid, record)
         return recids
