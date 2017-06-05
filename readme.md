@@ -49,7 +49,11 @@ This info is then used to generate an output in the [dot language](https://en.wi
         
         git clone https://github.com/klieret/inspiderweb
     
-    or download the current version as a ```.zip``` by clicking [here](https://github.com/klieret/inspiderweb/archive/master.zip). It only uses the standard python libraries, so there should be no need install any other packages. 
+    or download the current version as a ```.zip``` by clicking [here](https://github.com/klieret/inspiderweb/archive/master.zip). 
+    I assume you already have ```pythone3``` installed. 
+    As for python >= 3.5 it only uses the standard python libraries, for earlier version, you need to install the ```typing``` package, e.g. run
+    
+        sudo pip3 install typing
 
 2. Install graphviz. On most Linux systems this should already be in the repository, so
 
