@@ -227,56 +227,65 @@ class Database(object):
                 self.update_record(recid, record)
         logger.debug("Finished adding records.")
 
-    def get_references(self, other_recid, force=False) -> bool:
+    def get_references(self, recid, force=False) -> bool:
         """ Download references from inspirehep.
 
         """
-        this_record = self.get_record(other_recid)
-        if this_record.references_dl and not force:
+        record = self.get_record(recid)
+        if record.references_dl and not force:
             logger.debug("Skipping downloading of references.")
             return False
-        search_string = this_record.recid
+        search_string = record.recid
+
+        recids = self.get_inspire_info("refersto:recid:{}".format(record.recid))
+        record.references.update(recids)
+        record.references_dl = True
+        return True
+
+    def get_inspire_info(self, searchstring):
+        """ Returns a list of the recids of all results found, while updating
+        the db with pieces of information found on the way.
+        """
         # fixme: we will only get junks, so we have to loop
         api_string = "http://inspirehep.net/search?p={p}&of={of}&ot={ot}".format(
-            p="refersto:recid:{}".format(this_record.recid),
+            p=searchstring,
             of="recjson",
             ot="recid,system_control_number")
         # result = download(api_string)
         result = download(api_string)
         pyob = json.loads(result)
-        for other_record in pyob:
+        recids = set()
+        for record in pyob:
             # print(record)
-            other_recid = other_record['recid']
-            other_bibkey = ""
-            other_arxiv_code = ""
-            if not isinstance(other_record['system_control_number'], list):
+            recid = record['recid']
+            bibey = ""
+            arxiv_code = ""
+            if not isinstance(record['system_control_number'], list):
                 # if there is only one value here, than this is not a list
                 # and in this case the only value supplied should be the
                 # bibtex key
-                system = other_record['system_control_number']
+                system = record['system_control_number']
                 assert system["institute"] in ['INSPIRETeX', 'SPIRESTeX']
-                other_bibkey = system["value"]
+                bibey = system["value"]
             else:
-                for system in other_record['system_control_number']:
+                for system in record['system_control_number']:
                     if system["institute"] == 'arXiv':
-                        other_arxiv_code = system["value"]
+                        arxiv_code = system["value"]
                     if system["institute"] in ['INSPIRETeX', 'SPIRESTeX']:
-                        if other_bibkey:
+                        if bibey:
                             # we already met a bibkey
-                            assert other_bibkey ==  system["value"]
+                            assert bibey ==  system["value"]
                         else:
-                            other_bibkey = system["value"]
-            other_record.references.add(other_recid)
-            other_record = self.get_record(other_recid)
-            if other_record.bibkey:
-                assert other_record.bibkey == other_bibkey
+                            bibey = system["value"]
+            recids.add(recid)
+            record = self.get_record(recid)
+            if record.bibkey:
+                assert record.bibkey == bibey
             else:
-                other_record.bibkey = other_bibkey
+                record.bibkey = bibey
             # don't want to make lists of fulltext_urls, so let's just
             # take this one
             # fixme: this is not yet the real arxiv url
-            other_record.fulltext_url = other_arxiv_code
-            self.update_record(other_recid, other_record)
-
-        this_record.references_dl = True
-        return True
+            record.fulltext_url = arxiv_code
+            self.update_record(recid, record)
+        return recids
