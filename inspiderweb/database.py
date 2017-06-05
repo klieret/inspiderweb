@@ -6,6 +6,9 @@ import re
 import time
 from .log import logger
 from typing import List
+import socket
+import urllib.request
+import json
 
 """ Part of inspiderweb: Tool to analyze paper reference networks.
 Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
@@ -14,6 +17,45 @@ This file defines the Database class. The Database mostly is a collection of
 Record objects (that hold information of a record/paper from inspirehep) plus
 some methods to update/save/cache information.
 """
+
+
+def download(url: str, retries=3, timeout=10, sleep_after=3,
+             raise_exception=False) -> str:
+    """ Download from url with automatic retries.
+    Also prints logging messages.
+
+    Args:
+        url: Url to download.
+        retries: Number of possible retries.
+        timeout: Abort downloading after $timeout s.
+        sleep_after: Time [s] to sleep after each attempt.
+        raise_exception: Raise Exception if download fails after retries.
+    """
+    socket.setdefaulttimeout(timeout)
+    string = ""
+    for attempt in range(retries):
+        logger.debug("Downloading from {}.".format(url))
+        try:
+            string = urllib.request.urlopen(url).read().decode("utf-8")
+        except Exception:
+            logger.warning("Download of {} failed. Sleeping for {}s"
+                           "before maybe retrying.".format(url, sleep_after))
+            time.sleep(sleep_after)
+            continue
+
+        logger.debug("Download successfull. Sleeping for {}s.".format(
+            sleep_after))
+        time.sleep(sleep_after)
+        break
+
+    if string:
+        return string
+
+    logger.error("Finally failed to download {}. Now stopping.".format(url))
+    if raise_exception:
+        raise TimeoutError
+
+    return ""
 
 
 class Database(object):
@@ -75,6 +117,20 @@ class Database(object):
         pickle.dump(self._records, open(path, "wb"))
         logger.debug("Successfully saved db to {}".format(path))
 
+    def get_record(self, recid):
+        """ Return record with id $recid from database. Record will be created
+        if it was not in the database before.
+        """
+
+        if recid in self._records:
+            return self._records[recid]
+        else:
+            return Record(recid)
+
+    def update_record(self, recid, record):
+        """ Update record with id $recid with record $record. """
+        self._records[recid] = record
+
     def autocomplete_records(self, updates: List, force=False, save_every=5,
                              recids=None, statistics_every=5) -> bool:
         """ Download information for each record from inspirehep.
@@ -96,7 +152,7 @@ class Database(object):
         """
 
         for update in updates:
-            if not update in ["bib", "refs", "cites"]:
+            if update not in ["bib", "refs", "cites"]:
                 logger.error("Unrecognize update option {}. "
                              "I will simply ignore this for "
                              "now.".format(update))
@@ -132,19 +188,6 @@ class Database(object):
 
         return True
 
-    def get_record(self, recid):
-        """ Return record with id $recid from database. Record will be created
-        if it was not in the database before.
-        """
-
-        if recid in self._records:
-            return self._records[recid]
-        else:
-            return Record(recid)
-
-    def update_record(self, recid, record):
-        """ Update record with id $recid with record $record. """
-        self._records[recid] = record
 
     def load_labels_from_file(self,
                               path: str,
@@ -183,3 +226,57 @@ class Database(object):
                 record.custom_label = label
                 self.update_record(recid, record)
         logger.debug("Finished adding records.")
+
+    def get_references(self, other_recid, force=False) -> bool:
+        """ Download references from inspirehep.
+
+        """
+        this_record = self.get_record(other_recid)
+        if this_record.references_dl and not force:
+            logger.debug("Skipping downloading of references.")
+            return False
+        search_string = this_record.recid
+        # fixme: we will only get junks, so we have to loop
+        api_string = "http://inspirehep.net/search?p={p}&of={of}&ot={ot}".format(
+            p="refersto:recid:{}".format(this_record.recid),
+            of="recjson",
+            ot="recid,system_control_number")
+        # result = download(api_string)
+        result = download(api_string)
+        pyob = json.loads(result)
+        for other_record in pyob:
+            # print(record)
+            other_recid = other_record['recid']
+            other_bibkey = ""
+            other_arxiv_code = ""
+            if not isinstance(other_record['system_control_number'], list):
+                # if there is only one value here, than this is not a list
+                # and in this case the only value supplied should be the
+                # bibtex key
+                system = other_record['system_control_number']
+                assert system["institute"] in ['INSPIRETeX', 'SPIRESTeX']
+                other_bibkey = system["value"]
+            else:
+                for system in other_record['system_control_number']:
+                    if system["institute"] == 'arXiv':
+                        other_arxiv_code = system["value"]
+                    if system["institute"] in ['INSPIRETeX', 'SPIRESTeX']:
+                        if other_bibkey:
+                            # we already met a bibkey
+                            assert other_bibkey ==  system["value"]
+                        else:
+                            other_bibkey = system["value"]
+            other_record.references.add(other_recid)
+            other_record = self.get_record(other_recid)
+            if other_record.bibkey:
+                assert other_record.bibkey == other_bibkey
+            else:
+                other_record.bibkey = other_bibkey
+            # don't want to make lists of fulltext_urls, so let's just
+            # take this one
+            # fixme: this is not yet the real arxiv url
+            other_record.fulltext_url = other_arxiv_code
+            self.update_record(other_recid, other_record)
+
+        this_record.references_dl = True
+        return True
