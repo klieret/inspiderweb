@@ -4,7 +4,6 @@ python:
   - "3.5"
 install: "pip install -r requirements.txt"
 script: 
-  - "python3 -m unittest discover"
   - "python3 inspiderweb.py --help"
   - "python3 inspiderweb.py --h"
   - "python3 inspiderweb.py --database db/test.pickle"
