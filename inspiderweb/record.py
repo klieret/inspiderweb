@@ -81,9 +81,14 @@ class Record(object):
         if not self.bibkey:
             self.bibkey = other.bibkey
         assert self.mid == other.mid
+
         self.references.update(other.references)
         self.citations.update(other.citations)
         self.cocitations.update(other.cocitations)
+
+        self.references_dl |= other.references_dl
+        self.citations_dl |= other.citations_dl
+        self.cocitations_dl |= other.cocitations_dl
 
         if not self._label:
             self._label = other.label
