@@ -117,8 +117,8 @@ Action Options:
 
   -p, --plot            Generate dot output (i.e. plot).
   -u {refs,cites,bib} [{refs,cites,bib} ...], --updateseeds {refs,cites,bib} [{refs,cites,bib} ...]
-                        Get specified information for the seeds. records
-                        Multiple arguments are supported.
+                        Get specified information for the seeds. Multiple
+                        arguments are supported.
   -t {refs,cites,bib} [{refs,cites,bib} ...], --updatedb {refs,cites,bib} [{refs,cites,bib} ...]
                         Get specified information for the records in the
                         database. Multiple arguments are supported.

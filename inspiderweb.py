@@ -62,7 +62,7 @@ action_options.add_argument("-p", "--plot", required=False,
                             default=False)
 action_options.add_argument("-u", "--updateseeds", required=False,
                             help="Get specified information for the seeds. "
-                                 "records Multiple arguments are supported. ",
+                                 "Multiple arguments are supported. ",
                             type=str, default="", nargs="+",
                             choices=["refs", "cites", "bib"])
 action_options.add_argument("-t", "--updatedb", required=False,
