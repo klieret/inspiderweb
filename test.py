@@ -1,13 +1,8 @@
 #!/usr/bin/env python3
 
-import logging
-from inspiderweb.log import logcontrol
 from inspiderweb.database import Database
 import unittest
 import os.path
-
-# todo: rather log to a file or something
-logcontrol.sh.setLevel(logging.ERROR)
 
 
 class TestBasics(unittest.TestCase):
@@ -50,10 +45,18 @@ class TestBasics(unittest.TestCase):
 
 class TestDatabase(unittest.TestCase):
     def setUp(self):
+        # note: sometimes this is not exactly the same on the /references
+        # page, as we only get those for papers which are registered
+        # on inspirehep.
         self.expected_recid_references = {"0699123": 21,
-                                          "460528": 0, }
+                                          "460528": 0,
+                                          "1514038": 119,
+                                          "44993": 0
+            }
         self.expected_recid_citations = {"0699123": 104,
-                                         "460528": 5, }
+                                         "460528": 5,
+                                         "1514038": 2,
+                                         "44993": 0}
         self.db_path = "db/tmp_test"
         # make sure we start over fresh
         if os.path.exists(self.db_path):
