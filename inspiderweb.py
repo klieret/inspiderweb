@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import datetime
-from inspiderweb.log import logger
+from inspiderweb.log import logger, logcontrol
 from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
 import sys
@@ -85,25 +85,25 @@ misc_options.add_argument("--maxseeds", required=False, type=int,
 misc_options.add_argument("--forceupdate", action="store_true",
                           help="For all information that we get from the "
                                "database: Force redownload")
+misc_options.add_argument("-v" "--verbosity", required=False, type=str,
+                          help="Verbosity",
+                          choices=["debug", "info", "warning", "error",
+                                   "critical"],
+                          default="debug", dest="verbosity")
 
 args = parser.parse_args()
+logcontrol.set_verbosity_from_argparse(args.verbosity)
 
 if args.plot and not args.seeds:
-    logger.error("We need seeds to plot. Exiting.")
+    logger.critical("We need seeds to plot. Exiting.")
     sys.exit(10)
 if args.plot and not args.output:
-    logger.error("We need output filename to plot. Exiting.")
+    logger.critical("We need output filename to plot. Exiting.")
     sys.exit(20)
 if args.updateseeds and not args.seeds:
-    logger.error("We need seeds to update seeds. Exiting.")
+    logger.critical("We need seeds to update seeds. Exiting.")
     sys.exit(30)
 
-# todo: Use API instead of parsing. But I don't see where there is a clear ...
-# ...link to cited documents....
-# via citedby:recid:1471118
-# Use API via refersto:recid:1471118 etc. to get refernces NOTE: WE CAN EVEN NEST THOSE! http://inspirehep.net/info/hep/search-tips?ln=en
-# Use API via cocitedwith:1411459
-# todo: add docstrings
 # todo: maybe use a proper format to save the record data or at least allow ...
 # .... to export into such
 # todo: add clusters
@@ -133,7 +133,7 @@ for seedfile in args.seeds:
     logger.info("Read {} seeds from file(s) {}.".format(len(seeds),
                                                         ', '.join(args.seeds)))
 
-db.autocomplete_records(args.updateseeds, force=args.forceupdate, mids=seeds)
+db.autocomplete_records(args.updateseeds, force=args.forceupdate, recids=seeds)
 db.autocomplete_records(args.updatedb, force=args.forceupdate)
 
 if args.plot:
@@ -167,15 +167,15 @@ if args.plot:
         return sr.bibkey and tr.bibkey and source in seeds and target in seeds
 
     # fixme: use getter to get all records
-    for mid, record in db._records.items():
-        for reference_mid in record.references:
-            if not valid_connection(record.mid, reference_mid):
+    for recid, record in db._records.items():
+        for referece_recid in record.references:
+            if not valid_connection(record.recid, referece_recid):
                 continue
-            dg.add_connection(record.mid, reference_mid)
-        for citation_mid in record.citations:
-            if not valid_connection(record.mid, citation_mid):
+            dg.add_connection(record.recid, referece_recid)
+        for citation_recid in record.citations:
+            if not valid_connection(record.recid, citation_recid):
                 continue
-            dg.add_connection(citation_mid, record.mid)
+            dg.add_connection(citation_recid, record.recid)
 
     dg.generate_dot_str(rank=args.rank)
     dg.write_to_file(args.output)
