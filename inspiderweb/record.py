@@ -22,6 +22,7 @@ class Record(object):
         self.references_dl = False
         self.citations_dl = False
         self.cocitations_dl = False
+        self.info_dl = False
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__
@@ -48,6 +49,7 @@ class Record(object):
         self.references_dl |= other.references_dl
         self.citations_dl |= other.citations_dl
         self.cocitations_dl |= other.cocitations_dl
+        self.info_dl |= other.info_dl
 
         if not self.custom_label:
             self.custom_label = other.custom_label
