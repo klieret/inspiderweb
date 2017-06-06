@@ -23,6 +23,9 @@ class Record(object):
         self.citations_dl = False
         self.cocitations_dl = False
 
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
+
     def merge(self, other) -> None:
         """ Merge this record with another Record
         Args:
@@ -47,7 +50,7 @@ class Record(object):
         self.cocitations_dl |= other.cocitations_dl
 
         if not self.custom_label:
-            self.custom_label = other.label
+            self.custom_label = other.custom_label
         if not self.fulltext_url:
             self.fulltext_url = other.fulltext_url
 
@@ -62,7 +65,7 @@ class Record(object):
         return self.inspire_url.split("/")[-1]
 
     def __str__(self):
-        return "R({})".format(self.recid)
+        return str(self.__dict__)
 
     def __repr__(self):
-        return self.__str__()
+        return "R({})".format(self.recid)
