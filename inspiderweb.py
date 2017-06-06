@@ -183,8 +183,10 @@ for path in args.bibkeys:
             for file in files:
                 these_new_recids = \
                     get_bibkeys_from_file(os.path.join(root, file))
-                logger.info("Got {} seeds from bibkeys from file {}.".format(
-                    len(these_new_recids), path))
+                if these_new_recids:
+                    logger.info("Got {} seeds from bibkeys "
+                                "from file {}.".format(
+                        len(these_new_recids), os.path.join(root, file)))
 
     if os.path.isfile(path):
         new_recids = get_bibkeys_from_file(path)
