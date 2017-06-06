@@ -164,15 +164,15 @@ for search in args.searchstring:
 
 
 def get_bibkeys_from_file(bibpath):
+    bibkey_regex = re.compile(r"[a-zA-Z]{1,20}:[0-9]{4}[a-z]{0,10}")
     with open(bibpath, "r") as bibfile:
         bibkeys = set()
         for bibline in bibfile:
             bibkeys.update(bibkey_regex.findall(bibline))
-    bibkey_recids = db.get_recids_from_bibkeys(bibkeys)
+    bibkey_recids = db.get_recids_from_bibkeys(bibkeys).keys()
     return bibkey_recids
 
 for path in args.bibkeys:
-    bibkey_regex = re.compile(r"[a-zA-Z]{1,20}:[0-9]{4}[a-z]{0,10}")
     new_recids = set()
     if not os.path.exists(path):
         logger.critical("Input file {} does not exist. Abort.".format(path))

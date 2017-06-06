@@ -105,6 +105,7 @@ class TestSearchMethods(unittest.TestCase):
         self.db.load()
 
     def testSearchQuery(self):
+        self.assertEqual(self.db.get_recids_from_search("recid:1"), {'1'})
         # make sure those aren't likely to change with time
         search_query_result_length = {"a feynman and date < 1990": 76,
                                       "a gell-mann and date < 1990": 123}
@@ -112,3 +113,17 @@ class TestSearchMethods(unittest.TestCase):
             with self.subTest(query=query):
                 recids = self.db.get_recids_from_search(query)
                 self.assertEqual(len(recids), length)
+
+    def testGetCachedBibkeyRecid(self):
+        recid = "1"
+        record = self.db.get_record(recid)
+        record.bibkey = "asdf:2010x"
+        self.db.update_record(recid, record)
+        results = self.db.get_recids_from_bibkeys({record.bibkey, "notinhere"},
+                                                  offline_only=True)
+        self.assertEqual(results, {record.bibkey: recid})
+        results = self.db.get_recids_from_bibkeys({"Davies:2016ruz"})
+        self.assertEqual(results, {"Davies:2016ruz": "1472971"})
+
+if __name__ == "__main__":
+    unittest.main()

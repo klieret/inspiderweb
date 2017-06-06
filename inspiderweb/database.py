@@ -145,26 +145,29 @@ class Database(object):
             self._records[recid] = Record(recid)
             return self._records[recid]
 
-    def get_recids_from_bibkeys(self, bibkeys: set):
+    def get_recids_from_bibkeys(self, bibkeys: set, offline_only=False):
         """ Try to search for as many bibkeys as possible with one run
         as it speeds up the search in the internal database. """
         # 1. search internally
         results = {}
-        for recid, record in self._records:
+        for recid, record in self._records.items():
             if record.bibkey in bibkeys:
                 if record.bibkey in results:
                     assert results[record.bibkey] == recid
                 else:
                     results[record.bibkey] = recid
+        if offline_only:
+            return results
         # 2. search inspire for the remaining
-        bibkeys.remove(results.keys())
+        bibkeys -= set(results.keys())
         for bibkey in bibkeys:
             recids = self.get_recids_from_search(bibkey)
             if len(recids) == 1:
-                results[bibkey] = recids[0]
+                results[bibkey] = list(recids)[0]
             else:
-                logger.error("{} records found for recid {}. I won't add "
+                logger.error("{} records found for bibkey {}. I won't add "
                              "anything. ".format(len(recids), bibkey))
+        return results
 
     def update_record(self, recid, record):
         """ Update record with id $recid with record $record. """
