@@ -50,7 +50,11 @@ setup_options.add_argument("-d", "--database", required=True,
 setup_options.add_argument("-o", "--output", required=False,
                            help="Output dot file.",
                            type=str)
-
+# todo: rather allow three options:
+# -s --searchstring: inspire search
+# -r --recids: recids
+# -b --bibkeys: file containing bibkeys (will be regexed). Or directory which
+#               will be recursively regexed.
 setup_options.add_argument("-s", "--seeds", required=False,
                            help="Input seed file. Multiple seed files are "
                                 "supported.",
