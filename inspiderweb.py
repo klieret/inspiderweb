@@ -89,7 +89,7 @@ misc_options.add_argument("-v" "--verbosity", required=False, type=str,
                           help="Verbosity",
                           choices=["debug", "info", "warning", "error",
                                    "critical"],
-                          default="info", dest="verbosity")
+                          default="debug", dest="verbosity")
 
 args = parser.parse_args()
 logcontrol.set_verbosity_from_argparse(args.verbosity)
@@ -167,15 +167,15 @@ if args.plot:
         return sr.bibkey and tr.bibkey and source in seeds and target in seeds
 
     # fixme: use getter to get all records
-    for mid, record in db._records.items():
-        for reference_mid in record.references:
-            if not valid_connection(record.mid, reference_mid):
+    for recid, record in db._records.items():
+        for referece_recid in record.references:
+            if not valid_connection(record.recid, referece_recid):
                 continue
-            dg.add_connection(record.mid, reference_mid)
-        for citation_mid in record.citations:
-            if not valid_connection(record.mid, citation_mid):
+            dg.add_connection(record.recid, referece_recid)
+        for citation_recid in record.citations:
+            if not valid_connection(record.recid, citation_recid):
                 continue
-            dg.add_connection(citation_mid, record.mid)
+            dg.add_connection(citation_recid, record.recid)
 
     dg.generate_dot_str(rank=args.rank)
     dg.write_to_file(args.output)
