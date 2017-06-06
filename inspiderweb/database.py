@@ -167,7 +167,7 @@ class Database(object):
                 updates.remove(update)
 
         if not updates:
-            return
+            return False
 
         if not recids:
             recids = self._records.keys()
@@ -180,17 +180,17 @@ class Database(object):
                 self.save()
             if i and i % statistics_every == 0:
                 self.statistics()
-                logger.debug("Sleeping a bit longer.")
-                time.sleep(15)
+                # logger.debug("Sleeping a bit longer.")
+                # time.sleep(15)
 
             record = self.get_record(recid)
 
             if "bib" in updates:
-                record.get_info(force=force)
+                self.get_info(recid, force=force)
             if "refs" in updates:
-                record.get_references(force=force)
+                self.get_references(recid, force=force)
             if "cites" in updates:
-                record.get_citations(force=force)
+                self.get_citations(recid, force=force)
 
             self.update_record(recid, record)
 
@@ -235,6 +235,17 @@ class Database(object):
                 self.update_record(recid, record)
         logger.debug("Finished adding records.")
 
+    def get_info(self, recid, force=False) -> bool:
+        record = self.get_record(recid)
+        if record.info_dl and not force:
+            logger.debug("Skipping downloading of info.")
+            return False
+        search_string = "recid:{}".format(record.recid)
+        self.get_recids_from_search(search_string)
+        record.info_dl = True
+        self.update_record(recid, record)
+        return True
+
     def get_references(self, recid, force=False) -> bool:
         """ Download references from inspirehep.
         """
@@ -242,7 +253,6 @@ class Database(object):
         if record.references_dl and not force:
             logger.debug("Skipping downloading of references.")
             return False
-        # fixme: those are actually citations
         search_string = "citedby:recid:{}".format(record.recid)
         recids = self.get_recids_from_search(search_string)
         logger.debug("{} is citing {} references.".format(recid, len(recids)))
