@@ -5,7 +5,7 @@ import unittest
 import os.path
 
 
-class TestBasics(unittest.TestCase):
+class TestDatabaseBasics(unittest.TestCase):
     # things that don't need to download anything
     def setUp(self):
         self.db_path = "db/tmp_test"
@@ -93,3 +93,22 @@ class TestDatabase(unittest.TestCase):
 
         self.assertEqual(len(record.citations), expected_citations)
         self.assertTrue(record.citations_dl)
+
+
+class TestSearchMethods(unittest.TestCase):
+    def setUp(self):
+        self.db_path = "db/tmp_test"
+        # make sure we start over fresh
+        if os.path.exists(self.db_path):
+            os.remove(self.db_path)
+        self.db = Database(self.db_path)
+        self.db.load()
+
+    def testSearchQuery(self):
+        # make sure those aren't likely to change with time
+        search_query_result_length = {"a feynman and date < 1990": 76,
+                                      "a gell-mann and date < 1990": 123}
+        for query, length in search_query_result_length.items():
+            with self.subTest(query=query):
+                recids = self.db.get_recids_from_search(query)
+                self.assertEqual(len(recids), length)

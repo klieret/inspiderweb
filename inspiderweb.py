@@ -158,7 +158,7 @@ for recidsfile in args.recids:
     recids.update(new_recids)
 
 for search in args.searchstring:
-    new_recids = db.get_recids_from_search()
+    new_recids = db.get_recids_from_search(search)
     logger.info("Got {} seeds from search query {}.".format(len(new_recids),
                                                             search))
 
