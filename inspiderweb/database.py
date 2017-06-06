@@ -37,9 +37,9 @@ def download(url: str, retries=3, timeout=10, sleep_after=3,
         logger.debug("Downloading from {}.".format(url))
         try:
             string = urllib.request.urlopen(url).read().decode("utf-8")
-        except Exception:
-            logger.warning("Download of {} failed. Sleeping for {}s"
-                           "before maybe retrying.".format(url, sleep_after))
+        except Exception as ex:
+            logger.warning("Download of {} failed because of {}. Sleeping for {}s"
+                           "before maybe retrying.".format(url, ex,  sleep_after))
             time.sleep(sleep_after)
             continue
 
@@ -299,7 +299,7 @@ class Database(object):
         # print(recids)
         return recids
 
-    def get_recids_from_search_chunk(self, searchstring, record_group, record_offset):
+    def get_recids_from_search_chunk(self, searchstring, record_group, record_offset) -> set:
         """ Returns a list of the recids of all results found, while updating
         the db with pieces of information found on the way.
         """
@@ -311,7 +311,11 @@ class Database(object):
             jrec=record_offset)  # result offset
         # result = download(api_string)
         result = download(api_string)
+        if not result:
+            return set()
         pyob = json.loads(result)
+        if not pyob:
+            return set()
         recids = set()
         for record in pyob:
             # print(record)
@@ -329,14 +333,16 @@ class Database(object):
                 # we have a list and go through it to pick out relevant
                 # information
                 for system in record['system_control_number']:
-                    if system["institute"] == 'arXiv':
+                    if system["institute"] == 'arXiv' and "value" in system:
                         arxiv_code = system["value"]
-                    if system["institute"] in ['INSPIRETeX', 'SPIRESTeX']:
-                        if bibkey:
-                            # we already met a bibkey
-                            assert bibkey == system["value"]
-                        else:
-                            bibkey = system["value"]
+                    if system["institute"] in ['INSPIRETeX', 'SPIRESTeX'] \
+                            and "value" in system:
+                            if bibkey:
+                                # we already met a bibkey, so compare it
+                                # with this one
+                                assert bibkey == system["value"]
+                            else:
+                                bibkey = system["value"]
             # fixme: use merge instead
             recids.add(recid)
             record = self.get_record(recid)
