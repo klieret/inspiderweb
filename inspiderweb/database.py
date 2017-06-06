@@ -124,10 +124,19 @@ class Database(object):
             pickle.dump(self._records, dbfile)
         logger.debug("Successfully saved db to {}".format(path))
 
-    def get_record(self, recid):
+    def get_record(self, recid: str):
         """ Return record with id $recid from database. Record will be created
         if it was not in the database before.
         """
+        if isinstance(recid, int):
+            # though we support ints as recids, this should be
+            # discouraged, as we might swap the id system we use to bibkeys
+            # and similar, all of which are strings.
+            recid = str(recid)
+            logger.warning("{} was supplied as int and not string. Though"
+                           "this should work perfectly find, this is"
+                           "discouraged.".format(recid))
+        assert recid.isdigit()
 
         if recid in self._records:
             return self._records[recid]
