@@ -38,8 +38,9 @@ def download(url: str, retries=3, timeout=10, sleep_after=3,
         try:
             string = urllib.request.urlopen(url).read().decode("utf-8")
         except Exception as ex:
-            logger.warning("Download of {} failed because of {}. Sleeping for {}s"
-                           "before maybe retrying.".format(url, ex,  sleep_after))
+            logger.warning("Download of {} failed because of {}. "
+                           "Sleeping for {}s before "
+                           "maybe retrying.".format(url, ex,  sleep_after))
             time.sleep(sleep_after)
             continue
 
@@ -147,8 +148,8 @@ class Database(object):
                             "cites" (citations and cocitations of th erecord)
             force (bool): Force redownload of information
             save_every (int): Save database after this many completed records
-            recids (list): Only download information for records with id (recid) in
-                         this list.
+            recids (list): Only download information for records with id 
+                           (recid) in this list.
             statistics_every(int): Print statistics after this many downloaded
                                    items.
 
@@ -221,7 +222,8 @@ class Database(object):
                     continue
 
                 try:
-                    recid = re.search("[0-9]+", row[id_column].strip()).group(0)
+                    recid = re.search("[0-9]+",
+                                      row[id_column].strip()).group(0)
                 except AttributeError or KeyError:
                     continue
 
@@ -295,20 +297,22 @@ class Database(object):
             # print("recids from rg", record_offset, new_recids)
             if len(new_recids) < record_group:
                 break
-            record_offset += record_group -1
+            record_offset += record_group - 1
         # print(recids)
         return recids
 
-    def get_recids_from_search_chunk(self, searchstring, record_group, record_offset) -> set:
+    def get_recids_from_search_chunk(self, searchstring,
+                                     record_group, record_offset) -> set:
         """ Returns a list of the recids of all results found, while updating
         the db with pieces of information found on the way.
         """
-        api_string = "http://inspirehep.net/search?p={p}&of={of}&ot={ot}&rg={rg}&jrec={jrec}".format(
-            p=searchstring,  # search query
-            of="recjson",  # output format
-            ot="recid,system_control_number",  # output tags
-            rg=record_group,  # how many results/records (default 25)
-            jrec=record_offset)  # result offset
+        api_string = "http://inspirehep.net/search" \
+                     "?p={p}&of={of}&ot={ot}&rg={rg}&jrec={jrec}".format(
+                      p=searchstring,  # search query
+                      of="recjson",  # output format
+                      ot="recid,system_control_number",  # output tags
+                      rg=record_group,  # how many results/records (default 25)
+                      jrec=record_offset)  # result offset
         # result = download(api_string)
         result = download(api_string)
         if not result:

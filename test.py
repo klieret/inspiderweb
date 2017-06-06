@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 
 import logging
-from inspiderweb.log import logger, logcontrol
+from inspiderweb.log import logcontrol
 from inspiderweb.database import Database
-from inspiderweb.dotgraph import DotGraph
-import sys
 import unittest
 import os.path
-from inspiderweb.record import Record
 
 # todo: rather log to a file or something
 logcontrol.sh.setLevel(logging.ERROR)
@@ -54,9 +51,9 @@ class TestBasics(unittest.TestCase):
 class TestDatabase(unittest.TestCase):
     def setUp(self):
         self.expected_recid_references = {"0699123": 21,
-                                          "460528": 0,}
+                                          "460528": 0, }
         self.expected_recid_citations = {"0699123": 104,
-                                         "460528": 5,}
+                                         "460528": 5, }
         self.db_path = "db/tmp_test"
         # make sure we start over fresh
         if os.path.exists(self.db_path):
@@ -81,7 +78,7 @@ class TestDatabase(unittest.TestCase):
 
         self.db.get_references(recid)
 
-        self.assertEqual(len(record.references), expected_references) # 35
+        self.assertEqual(len(record.references), expected_references)
         self.assertTrue(record.references_dl)
 
     def _test_get_citations(self, recid, expected_citations):
@@ -91,7 +88,5 @@ class TestDatabase(unittest.TestCase):
 
         self.db.get_citations(recid)
 
-        self.assertEqual(len(record.citations), expected_citations) # 9
+        self.assertEqual(len(record.citations), expected_citations)
         self.assertTrue(record.citations_dl)
-
-

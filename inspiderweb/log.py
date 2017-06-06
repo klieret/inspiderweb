@@ -10,8 +10,8 @@ This file sets up logger/logging.
 class LogControl(object):
     """ The only use of this object is so that we have easy access
     to the stream handler etc. associated with the logger. """
-    def __init__(self, logger):
-        self.logger = logger
+    def __init__(self, logger_):
+        self.logger = logger_
         self.logger.setLevel(logging.DEBUG)
         self.sh = logging.StreamHandler()
         self.sh.setLevel(logging.DEBUG)
@@ -24,5 +24,3 @@ class LogControl(object):
 
 logger = logging.getLogger("inspirespider")
 logcontrol = LogControl(logger)
-
-
