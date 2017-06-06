@@ -100,7 +100,9 @@ class Database(object):
         if not os.path.exists(path):
             logger.warning("Could not load db from file.")
             return False
-        for recid, their_record in pickle.load(open(path, "rb")).items():
+        with open(path, "rb") as dbstream:
+            _records = pickle.load(dbstream)
+        for recid, their_record in _records.items():
             assert recid == their_record.recid
             my_record = self.get_record(recid)
             my_record.merge(their_record)
@@ -114,7 +116,8 @@ class Database(object):
 
         if not path:
             path = self.backup_path
-        pickle.dump(self._records, open(path, "wb"))
+        with open(path, "wb") as dbfile:
+            pickle.dump(self._records, dbfile)
         logger.debug("Successfully saved db to {}".format(path))
 
     def get_record(self, recid):
@@ -289,11 +292,11 @@ class Database(object):
             new_recids = self.get_recids_from_search_chunk(
                 searchstring, record_group, record_offset)
             recids.update(new_recids)
-            print("recids from rg", record_offset, new_recids)
+            # print("recids from rg", record_offset, new_recids)
             if len(new_recids) < record_group:
                 break
             record_offset += record_group -1
-        print(recids)
+        # print(recids)
         return recids
 
     def get_recids_from_search_chunk(self, searchstring, record_group, record_offset):

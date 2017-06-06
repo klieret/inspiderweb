@@ -95,13 +95,13 @@ args = parser.parse_args()
 logcontrol.set_verbosity_from_argparse(args.verbosity)
 
 if args.plot and not args.seeds:
-    logger.error("We need seeds to plot. Exiting.")
+    logger.critical("We need seeds to plot. Exiting.")
     sys.exit(10)
 if args.plot and not args.output:
-    logger.error("We need output filename to plot. Exiting.")
+    logger.critical("We need output filename to plot. Exiting.")
     sys.exit(20)
 if args.updateseeds and not args.seeds:
-    logger.error("We need seeds to update seeds. Exiting.")
+    logger.critical("We need seeds to update seeds. Exiting.")
     sys.exit(30)
 
 # todo: maybe use a proper format to save the record data or at least allow ...
