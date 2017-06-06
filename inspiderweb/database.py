@@ -8,6 +8,7 @@ from .log import logger
 from typing import List
 import socket
 import urllib.request
+import urllib.parse
 import json
 import collections
 
@@ -102,7 +103,7 @@ class Database(object):
         if not path:
             path = self.backup_path
         if not os.path.exists(path):
-            logger.warning("Could not load db from file.")
+            logger.warning("Db does not exist yet. Creating it.")
             return False
         with open(path, "rb") as dbstream:
             _records = pickle.load(dbstream)
@@ -360,15 +361,15 @@ class Database(object):
         """ Returns a list of the recids of all results found, while updating
         the db with pieces of information found on the way.
         """
-        api_string = "http://inspirehep.net/search" \
-                     "?p={p}&of={of}&ot={ot}&rg={rg}&jrec={jrec}".format(
-                      p=searchstring,  # search query
+        base_url = "http://inspirehep.net/search?"
+        api_string = "p={p}&of={of}&ot={ot}&rg={rg}&jrec={jrec}".format(
+                      p=urllib.parse.quote_plus(searchstring),  # search query
                       of="recjson",  # output format
                       ot="recid,system_control_number",  # output tags
                       rg=record_group,  # how many results/records (default 25)
                       jrec=record_offset)  # result offset
-        # result = download(api_string)
-        result = download(api_string)
+        api_url = base_url + api_string
+        result = download(api_url)
         if not result:
             return []
         pyob = json.loads(result)
