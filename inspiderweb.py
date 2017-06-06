@@ -7,6 +7,9 @@ from inspiderweb.dotgraph import DotGraph
 import sys
 import argparse
 from argparse import RawDescriptionHelpFormatter
+import os.path
+import re
+import os
 
 """ Main file of inspiderweb: Tool to analyze paper reference networks.
 Currently hosted at: https://github.com/klieret/inspiderweb
@@ -55,9 +58,24 @@ setup_options.add_argument("-o", "--output", required=False,
 # -r --recids: recids
 # -b --bibkeys: file containing bibkeys (will be regexed). Or directory which
 #               will be recursively regexed.
-setup_options.add_argument("-s", "--seeds", required=False,
-                           help="Input seed file. Multiple seed files are "
+setup_options.add_argument("-r", "--recids", required=False,
+                           help="Input file with recids as seeds. Multiple "
+                                "files are supported.",
+                           type=str, nargs="+", default=[])
+setup_options.add_argument("-s", "--searchstring", required=False,
+                           help="Take the results of inspirehep search query "
+                                "(search string you would enter in the "
+                                "inspirehep online search "
+                                "form) as seeds. Multiple search strings "
                                 "supported.",
+                           type=str, nargs="+", default=[])
+setup_options.add_argument("-b", "--bibkeys", required=False,
+                           help="Path of a file or a directory. If the path"
+                                "points to a file, it is searched for "
+                                "bibkeys, which are then used as seeds. If the"
+                                "path points to a directory, we recursively"
+                                "go into it (excluding hidden files) and "
+                                "search every file for bibkeys.",
                            type=str, nargs="+", default=[])
 
 action_options.add_argument("-p", "--plot", required=False,
@@ -122,22 +140,60 @@ for path in args.database[1:]:
 
 db.statistics()
 
-seeds = []
-for seedfile in args.seeds:
-    with open(seedfile, "r") as seedfile_stream:
+recids = set()
+
+for recidsfile in args.recids:
+    new_recids = set()
+    with open(recidsfile, "r") as seedfile_stream:
         for i, line in enumerate(seedfile_stream):
             if (i + 1) == args.maxseeds:
                 # if args.maxseeds == 0 (default), this will never run
                 break
-            line = line.replace('\n', "")
-            line = line.strip()
+            line = line.replace('\n', "").strip()
             if not line:
                 continue
-            seeds.append(line)
-    logger.info("Read {} seeds from file(s) {}.".format(len(seeds),
-                                                        ', '.join(args.seeds)))
+            new_recids.add(line)
+    logger.info("Got {} seeds from file {}.".format(len(new_recids),
+                                                     recidsfile))
+    recids.update(new_recids)
 
-db.autocomplete_records(args.updateseeds, force=args.forceupdate, recids=seeds)
+for search in args.searchstring:
+    new_recids = db.get_recids_from_search()
+    logger.info("Got {} seeds from search query {}.".format(len(new_recids),
+                                                            search))
+
+
+def get_bibkeys_from_file(bibpath):
+    with open(bibpath, "r") as bibfile:
+        bibkeys = set()
+        for bibline in bibfile:
+            bibkeys.update(bibkey_regex.findall(bibline))
+    bibkey_recids = db.get_recids_from_bibkeys(bibkeys)
+    return bibkey_recids
+
+for path in args.bibkeys:
+    bibkey_regex = re.compile(r"[a-zA-Z]{1,20}:[0-9]{4}[a-z]{0,10}")
+    new_recids = set()
+    if not os.path.exists(path):
+        logger.critical("Input file {} does not exist. Abort.".format(path))
+        sys.exit(50)
+    if os.path.isdir(path):
+        for root, dirs, files in os.walk(path):
+            # fixme: skip hidden files
+            for file in files:
+                these_new_recids = \
+                    get_bibkeys_from_file(os.path.join(root, file))
+                logger.info("Got {} seeds from bibkeys from file {}.".format(
+                    len(these_new_recids), path))
+
+    if os.path.isfile(path):
+        new_recids = get_bibkeys_from_file(path)
+        recids.update(new_recids)
+        logger.info("Got {} seeds from bibkeys from file {}.".format(
+            len(new_recids), path))
+
+db.autocomplete_records(args.updateseeds, force=args.forceupdate,
+                        recids=recids)
 db.autocomplete_records(args.updatedb, force=args.forceupdate)
 
 if args.plot:
@@ -168,7 +224,7 @@ if args.plot:
     def valid_connection(source, target):
         sr = db.get_record(source)
         tr = db.get_record(target)
-        return sr.bibkey and tr.bibkey and source in seeds and target in seeds
+        return sr.bibkey and tr.bibkey and source in recids and target in recids
 
     # fixme: use getter to get all records
     for recid, record in db._records.items():

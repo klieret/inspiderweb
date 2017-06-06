@@ -144,16 +144,37 @@ class Database(object):
             self._records[recid] = Record(recid)
             return self._records[recid]
 
+    def get_recids_from_bibkeys(self, bibkeys: set):
+        """ Try to search for as many bibkeys as possible with one run
+        as it speeds up the search in the internal database. """
+        # 1. search internally
+        results = {}
+        for recid, record in self._records:
+            if record.bibkey in bibkeys:
+                if record.bibkey in results:
+                    assert results[record.bibkey] == recid
+                else:
+                    results[record.bibkey] = recid
+        # 2. search inspire for the remaining
+        bibkeys.remove(results.keys())
+        for bibkey in bibkeys:
+            recids = self.get_recids_from_search(bibkey)
+            if len(recids) == 1:
+                results[bibkey] = recids[0]
+            else:
+                logger.error("{} records found for recid {}. I won't add "
+                             "anything. ".format(len(recids), bibkey))
+
     def update_record(self, recid, record):
         """ Update record with id $recid with record $record. """
         self._records[recid] = record
 
-    def autocomplete_records(self, updates: List, force=False, save_every=5,
+    def autocomplete_records(self, updates: set, force=False, save_every=5,
                              recids=None, statistics_every=5) -> bool:
         """ Download information for each record from inspirehep.
 
         Args:
-            updates (list): What information should be downloaded.
+            updates (set): What information should be downloaded.
                             Options are
                             "bib" (bibtex, in particular the bibkey),
                             "refs" (references of the record),
