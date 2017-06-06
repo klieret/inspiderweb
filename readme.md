@@ -1,9 +1,9 @@
 # InspiderWeb [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=master)](https://travis-ci.org/klieret/inspiderweb)
 [Features](#features) | [Screenshots](#screenshots) | [How does it work?](#how-does-it-work) | [Limitations/Bugs](#limitationsbugs) | [Installation](#installation) | [Usage](#usage) | [Tutorial](#tutorial) | [License](#license)
 
-This is a tool to analyze networks papers referencing and citing each other. It acts as a web-crawler, extracting information from [inspirehep](http://inspirehep.net/), then uses the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) to describe the network. The result can then be plotted by the [Graphviz Package](http://www.graphviz.org/) and similar programs.
+InspiderWeb is a tool to analyze networks papers referencing and citing each other. It gets its information from the [inspirehep](http://inspirehep.net/) API, then uses the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) to describe the network. The result can then be plotted by the [Graphviz Package](http://www.graphviz.org/) and similar programs.
 
-**I'm currently working on a new version that uses the proper inspirehep API. Development is happening on the ```new_core``` branch**.
+**Note: This Script was using webcraling & regex-html parsing (yes, that's evil) to extract information from inspiderweb and just recently switched to using the API. If something doesn't work, check out the ```webcrawling_legacy``` branch.**
 
 ## Features
 
@@ -38,9 +38,7 @@ This info is then used to generate an output in the [dot language](https://en.wi
 ## Limitations/Bugs
 
 * I didn't do too many tests and there's maybe more todo notes in the code than features itself, so don't expect everything to work right away!
-* I did not find an API for inspirehep that can offer all of the above pieces of information, so right now the script actually [downloads the html pages and parses them via regular expressions](http://i.imgur.com/gOPS2.png). Very elegant indeed! Any work on this would be very appreciated! UPDATE: ACTUALLY I FOUND IT, BUT NEED SOME TIME TO WORK IT OUT
-* This also means that the script is quite slow at the moment, as three pages have to be downloaded (one for the bibtex file, one for the references and one for the citations). The script waits a few seconds after each download as to not strain the inspirehep capacities, so just let in run in the background for a couple of hours and it should be done. 
-* The html pages of some papers which are cited by a 1000 others (or reference a similar great number of other papers) will be provided by inspirehep very slowly which can cause the script to skip the download entry (as it believes that the resource can't be reached). This can be somewhat tweaked by setting the ```timeout``` (right now in ```records.py```) to a bigger value.
+* Downloading the references/citations of a large number of papers will take its time. The script waits a few seconds after each download as to not strain the inspirehep capacities, so just let in run in the background for a couple of hours and it should be done. As a rough estimate, it's one download per 25 references/citations per paper, so about 4s per 25 references per paper. 
 * Right now all the downloaded information is saved as a python3 [pickle](https://docs.python.org/2/library/pickle.html) of ```Record``` objects. This clearly is the easiest choice, but definitely not the best one for bigger database scales. If anyone wants to implement this more elegantly or provide export possibilities to other database format, this is very welcome.
 
 
@@ -153,7 +151,9 @@ Output:
     WARNING: Could not load db from file.
     INFO: ************** DATABASE STATISTICS ***************
     INFO: Current number of records: 0
-    INFO: Current number of completed records: 0
+    INFO: Current number of records with references: 0
+    INFO: Current number of records with citations: 0
+    INFO: Current number of records with cocitations: 0
     INFO: Current number of records with bibkey: 0
     INFO: **************************************************
 
@@ -162,13 +162,8 @@ Add a few seeds (the ids of inspirehep, i.e. the number ```811388``` from ```htt
     python3 inspiderweb.py --database db/test.pickle --seeds seeds/example_small.txt --updateseeds bib refs
     python3 inspiderweb.py -d db/test.pickle -s seeds/example_small.txt -u bib refs
    
-This can take some time (around 40s, mainly because the script waits quite often to not overload the inspirehep server), while we see output like: 
+This can take some time (around a minute, mainly because the script waits quite often to not overload the inspirehep server), while we see output like: 
 
-    INFO: ************** DATABASE STATISTICS ***************
-    INFO: Current number of records: 0
-    INFO: Current number of completed records: 0
-    INFO: Current number of records with bibkey: 0
-    INFO: **************************************************
     INFO: Read 11 seeds from file seeds/example_small.txt.
     DEBUG: Successfully saved db to db/test.pickle
     DEBUG: Downloading bibfile of 1125962
@@ -183,12 +178,14 @@ This can take some time (around 40s, mainly because the script waits quite often
 
 Afterwards, if we run the statistics again, we could see that we were successfull:
 
-    DEBUG: Successfully loaded db from db/test.pickle
     INFO: ************** DATABASE STATISTICS ***************
-    INFO: Current number of records: 10
-    INFO: Current number of completed records: 0
-    INFO: Current number of records with bibkey: 10
+    INFO: Current number of records: 618
+    INFO: Current number of records with references: 11
+    INFO: Current number of records with citations: 0
+    INFO: Current number of records with cocitations: 0
+    INFO: Current number of records with bibkey: 618
     INFO: **************************************************
+
 
 Now we are ready to plot the relations between these nodes:
 
@@ -267,7 +264,7 @@ To get ```.pdf``` output with clickable nodes, we cannot use ```-Tpdf``` however
 
 To get the graph sorted by years, simply supply the ```--rank year``` option. Doing all of this in one line (connecting different commands with ```&&```):
 
-    python3 inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o build/test.dot && dot -Tps2 build/test.dot > build/test.ps && ps2pdf build/test.ps build/test.pdf 
+    python3 inspiderweb.py -d db/test.pickle -p --rank year -s seeds/example_small.txt -o build/test.dot && dot -Tps2 build/test.dot > build/test.ps && ps2pdf build/test.ps build/test.pdf 
 
 ![tutorial year picture](https://github.com/klieret/readme-files/blob/master/inspiderweb/tutorial_year.png)
 
