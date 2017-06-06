@@ -9,6 +9,7 @@ from typing import List
 import socket
 import urllib.request
 import json
+import collections
 
 """ Part of inspiderweb: Tool to analyze paper reference networks.
 Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
@@ -33,8 +34,9 @@ def download(url: str, retries=3, timeout=10, sleep_after=3,
     """
     socket.setdefaulttimeout(timeout)
     string = ""
+    success = False
     for attempt in range(retries):
-        logger.debug("Downloading from {}.".format(url))
+        logger.debug("Trying to download from from {}.".format(url))
         try:
             string = urllib.request.urlopen(url).read().decode("utf-8")
         except Exception as ex:
@@ -47,9 +49,10 @@ def download(url: str, retries=3, timeout=10, sleep_after=3,
         logger.debug("Download successfull. Sleeping for {}s.".format(
             sleep_after))
         time.sleep(sleep_after)
+        success = True
         break
 
-    if string:
+    if success:
         return string
 
     logger.error("Finally failed to download {}. Now stopping.".format(url))
@@ -285,24 +288,35 @@ class Database(object):
     #     record.cocitations_dl = True
     #     return True
 
-    def get_recids_from_search(self, searchstring, record_group=25):
+    def get_recids_from_search(self, searchstring: str, record_group=25) -> set:
         # Long responses are split into chunks of $record_group records
         # so we need an additional loop.
         record_offset = 0
-        recids = set()
+        recids = []
         while True:
             new_recids = self.get_recids_from_search_chunk(
                 searchstring, record_group, record_offset)
-            recids.update(new_recids)
+            recids.extend(new_recids)
             # print("recids from rg", record_offset, new_recids)
             if len(new_recids) < record_group:
                 break
             record_offset += record_group - 1
         # print(recids)
-        return recids
+        recids = map(str, recids)  # fixme: shouldn't need that actually....
+        recids_unique = set(recids)
+        duplicates = [recid for recid, count in
+                      collections.Counter(recids).items() if count > 1]
+        if duplicates:
+            logger.warning("The following {} records appeared more than once:"
+                           "{}".format(len(duplicates),
+                                       ', '.join(duplicates)))
+        else:
+            logger.debug("No duplicates.")
+        return recids_unique
 
-    def get_recids_from_search_chunk(self, searchstring,
-                                     record_group, record_offset) -> set:
+    def get_recids_from_search_chunk(self, searchstring: str,
+                                     record_group: int,
+                                     record_offset: int) -> List:
         """ Returns a list of the recids of all results found, while updating
         the db with pieces of information found on the way.
         """
@@ -316,14 +330,14 @@ class Database(object):
         # result = download(api_string)
         result = download(api_string)
         if not result:
-            return set()
+            return []
         pyob = json.loads(result)
         if not pyob:
-            return set()
-        recids = set()
+            return []
+        recids = []
         for record in pyob:
             # print(record)
-            recid = record['recid']
+            recid = str(record['recid'])
             bibkey = ""
             arxiv_code = ""
             if not isinstance(record['system_control_number'], list):
@@ -347,8 +361,8 @@ class Database(object):
                                 assert bibkey == system["value"]
                             else:
                                 bibkey = system["value"]
-            # fixme: use merge instead
-            recids.add(recid)
+            # todo: maybe use merge instead
+            recids.append(recid)
             record = self.get_record(recid)
             if record.bibkey:
                 assert record.bibkey == bibkey
