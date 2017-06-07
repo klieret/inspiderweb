@@ -41,7 +41,7 @@ parser = argparse.ArgumentParser(description=description,
 setup_options = parser.add_argument_group('Setup/Configure Options',
                                           'Supply in/output paths. Note that '
                                           'in most cases, seeds are only '
-                                          'added to the database, if we '
+                                          'added to the database if we '
                                           'perform some action.')
 action_options = parser.add_argument_group('Action Options',
                                            'What do you want to do?')
@@ -91,26 +91,24 @@ action_options.add_argument("-p", "--plot", required=False,
                             help="Generate dot output (i.e. plot).",
                             default=False)
 
-# fixme: rather add a general download option with
-# always download info, get what to download from
-# -seeds
-# -seeds.refs
-# -seeds.cites
-# -seeds.refs.refs
-# -seeds.cites.cites
-# -all
+update_help = "Download information. Multiple arguments are supported. " \
+              "Each argument must look like this: Starts with 'seeds' or " \
+              "'all' (depending on whether every db entry or just the seeds" \
+              " will be taken as starting point). Just 'seeds' (short 's') "\
+              "or 'all' (short 'a') will" \
+              " only download the bibliographic information for every item. " \
+              "Furthermore, there are the following options: " \
+              "(1) 'refs' (short 'r'): References of each recid " \
+              "(2) 'cites' (short 'c'): Citations of each recid " \
+              "(3) 'refscites' or 'citesrefs' (short 'rc' or 'cr'): both. " \
+              "These options can be chained, e.g. seeds.refs.cites means " \
+              "1. For each seed recid, get all reference "\
+              "2. For all of the above, get all citations. " \
+              "Similarly one could have written 's.r.c'. "
 
-action_options.add_argument("-u", "--updateseeds", required=False,
-                            help="Get specified information for the seeds. "
-                                 "Multiple arguments are supported. ",
-                            type=str, default="", nargs="+",
-                            choices=["refs", "cites", "bib"])
-action_options.add_argument("-t", "--updatedb", required=False,
-                            help="Get specified information for the records in"
-                                 " the database. "
-                                 "Multiple arguments are supported. ",
-                            type=str, default="", nargs="+",
-                            choices=["refs", "cites", "bib"])
+action_options.add_argument("-u", "--update", required=False,
+                            help=update_help,
+                            type=str, default="", nargs="+")
 
 misc_options.add_argument("-h", "--help",
                           help="Print this help message.", action="help")
@@ -134,15 +132,10 @@ misc_options.add_argument("-v" "--verbosity", required=False, type=str,
 args = parser.parse_args()
 logcontrol.set_verbosity_from_argparse(args.verbosity)
 
-if args.plot and not args.seeds:
-    logger.critical("We need seeds to plot. Exiting.")
-    sys.exit(10)
+# fixme: add tests again
 if args.plot and not args.output:
     logger.critical("We need output filename to plot. Exiting.")
     sys.exit(20)
-if args.updateseeds and not args.seeds:
-    logger.critical("We need seeds to update seeds. Exiting.")
-    sys.exit(30)
 
 # todo: maybe use a proper format to save the record data or at least allow ...
 # .... to export into such
@@ -211,9 +204,8 @@ for path in args.bibkeys:
         logger.info("Got {} seeds from bibkeys from file {}.".format(
             len(new_recids), path))
 
-db.autocomplete_records(args.updateseeds, force=args.forceupdate,
+db.autocomplete_records(args.update, force=args.forceupdate,
                         recids=recids)
-db.autocomplete_records(args.updatedb, force=args.forceupdate)
 
 if args.plot:
 

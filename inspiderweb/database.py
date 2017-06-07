@@ -11,6 +11,7 @@ import urllib.request
 import urllib.parse
 import json
 import collections
+import sys
 
 """ Part of inspiderweb: Tool to analyze paper reference networks.
 Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
@@ -173,22 +174,26 @@ class Database(object):
         """ Update record with id $recid with record $record. """
         self._records[recid] = record
 
-    def autocomplete_records2(self, update: str, force=False, save_every=5,
-                              recids=None, statistics_every=5) -> bool:
-        """ Update: A string of refs and cites, e.g. refs.cites.refs """
-
-
-    # fixme: move loops in separate wrapper function
-    def autocomplete_records(self, updates: set, force=False, save_every=5,
-                             recids=None, statistics_every=5) -> bool:
+    def autocomplete_records(self, updates: List[str], force=False, save_every=5,
+                             recids=None, statistics_every=5) -> set:
         """ Download information for each record from inspirehep.
 
         Args:
-            updates (set): What information should be downloaded.
-                            Options are
-                            "bib" (bibtex, in particular the bibkey),
-                            "refs" (references of the record),
-                            "cites" (citations and cocitations of th erecord)
+            updates (list of strings): 
+                Which information should be downloaded? There are the 
+                following basic options:
+                * empty string: Bibliographic info of 
+                  each recid.
+                * refs (short r): References of each recid
+                * cites (short c): Citations of each recid
+                * refscites or citesrefs (short rc or cr): both
+                The last three options can be chained, 
+                e.g. refs.cites means
+                1. For each supplied recid, get all reference
+                2. For all of the above, get all citations.
+                Note: This does not apply to 'info' (as the info 
+                part of each of the references/citations will be
+                downloaded anyway.
             force (bool): Force redownload of information
             save_every (int): Save database after this many completed records
             recids (list): Only download information for records with id 
@@ -198,30 +203,62 @@ class Database(object):
 
         Returns: True if we actually did something.
         """
-
         if not recids:
-            recids = set(self._records.keys())
+            recids = set()
+        for update in updates:
+            recids.update(self._autocomplete_records(update, force=force,
+                          save_every=save_every, recids=recids,
+                          statistics_every=statistics_every))
+
+    def _autocomplete_records(self, update: str, force=False, save_every=5,
+                              recids=None, statistics_every=5) -> set:
+        """ Worker function of self.autocomplete_records see there for more
+        information on the parameters 
+        """
 
         steps = update.split('.')
-        for step in steps:
-            logger.info("Downloading {} for {} records.".format(step,
-                                                                len(recids)))
+        if steps[0] in ['seeds', 's']:
+            pass
+        elif steps[0] in ['all', 'a']:
+            recids = set(self._records.keys())
+        else:
+            logger.critical("Wrong syntax: Update string starts "
+                            "with {}. Will abort.".format(steps[0]))
+            sys.exit(1)
 
+        steps = steps[1:]
+
+        if len(steps) == 0:
             for i, recid in enumerate(recids):
                 if i and i % save_every == 0:
                     self.save()
                 if i and i % statistics_every == 0:
                     self.statistics()
+                self.get_info(recid)
 
-                if step == "refs":
+        for step in steps:
+            logger.info("Downloading {} for {} records.".format(step,
+                                                                len(recids)))
+            # note how we are iterating over a copy of the set, instead of
+            # changing the set itself!
+            for i, recid in enumerate(recids.copy()):
+                if i and i % save_every == 0:
+                    self.save()
+                if i and i % statistics_every == 0:
+                    self.statistics()
+
+                if step in ["refs", "r"]:
                     recids.update(self.get_references(recid, force=force))
-                if step == "cites":
+                elif step in ["cites", "c"]:
+                    recids.update(self.get_citations(recid, force=force))
+                elif step in ["refscites", "rc", "cr", "citesrefs"]:
+                    recids.update(self.get_references(recid, force=force))
                     recids.update(self.get_citations(recid, force=force))
                 else:
                     logger.error("Unrecognize update option {}. "
                                  "I will simply ignore this for "
-                                 "now.".format(update))
-        return True
+                                 "now.".format(step))
+        return recids
 
     def load_labels_from_file(self,
                               path: str,
@@ -273,35 +310,35 @@ class Database(object):
         self.update_record(recid, record)
         return True
 
-    def get_references(self, recid, force=False) -> bool:
+    def get_references(self, recid, force=False) -> set():
         """ Download references from inspirehep.
         """
         record = self.get_record(recid)
         if record.references_dl and not force:
             logger.debug("Skipping downloading of references.")
-            return False
+            return record.references
         search_string = "citedby:recid:{}".format(record.recid)
         recids = self.get_recids_from_search(search_string)
         logger.debug("{} is citing {} references.".format(recid, len(recids)))
         record.references.update(recids)
         self.update_record(recid, record)
         record.references_dl = True
-        return True
+        return recids
 
-    def get_citations(self, recid, force=False) -> bool:
+    def get_citations(self, recid, force=False) -> set():
         """ Download citations from inspirehep.
         """
         record = self.get_record(recid)
         if record.citations_dl and not force:
             logger.debug("Skipping downloading of citations.")
-            return False
+            return record.citations
         search_string = "refersto:recid:{}".format(record.recid)
         recids = self.get_recids_from_search(search_string)
         logger.debug("{} is cited by {} records.".format(recid, len(recids)))
         record.citations.update(recids)
         self.update_record(recid, record)
         record.citations_dl = True
-        return True
+        return recids
 
     # fixme: somehow still doesn't work with recjson:
     # http://inspirehep.net/search?p=cocitedwith:566620&of=h&rg=25&sc=0
@@ -341,6 +378,8 @@ class Database(object):
         # print(recids)
         recids = map(str, recids)  # fixme: shouldn't need that actually....
         recids_unique = set(recids)
+        # somehow this is being flagged in pycharm, but seems to be correct
+        # and runs without an error.
         duplicates = [recid for recid, count in
                       collections.Counter(recids).items() if count > 1]
         if duplicates:
