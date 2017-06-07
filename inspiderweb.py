@@ -170,6 +170,7 @@ for search in args.searchstring:
 
 recids.update(get_recids_from_bibkey_paths(args.bibkeys, db=db))
 recids.update(get_recids_from_recid_paths(args.recids))
+recids.update(get_recids_from_url_paths(args.inspirehepurls))
 
 db.autocomplete_records(args.update, force=args.forceupdate, recids=recids)
 

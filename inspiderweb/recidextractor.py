@@ -59,4 +59,14 @@ def get_recids_from_bibkey_paths(paths, db):
     return get_recids_from_paths(paths, get_recids_from_bibkey_file, db=db)
 
 
+def get_recids_from_url_file(path, db=None):
+    url_regex = re.compile("inspirehep.net/record/([0-9]{1+})")
+    new_recids = set()
+    with open(path, "r") as stream:
+        for line in stream:
+            new_recids.update(url_regex.findall(line))
+    return new_recids
 
+
+def get_recids_from_url_paths(path, db=None):
+    return get_recids_from_paths(paths, get_recids_from_url_file)
