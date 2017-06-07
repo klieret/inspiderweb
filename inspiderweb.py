@@ -55,10 +55,12 @@ setup_options.add_argument("-d", "--database", required=True,
 setup_options.add_argument("-o", "--output", required=False,
                            help="Output dot file.",
                            type=str)
+# todo: also do the directory option there
 setup_options.add_argument("-r", "--recids", required=False,
                            help="Input file with recids as seeds. Multiple "
                                 "files are supported.",
                            type=str, nargs="+", default=[])
+# todo: additional option -u -urls that uses regexs to catch inspirehep urls.
 setup_options.add_argument("-s", "--searchstring", required=False,
                            help="Take the results of inspirehep search query "
                                 "(search string you would enter in the "
@@ -182,6 +184,8 @@ def get_bibkeys_from_file(bibpath):
     bibkey_recids = db.get_recids_from_bibkeys(bibkeys).keys()
     return bibkey_recids
 
+# todo: make function that takes a apply_to_file function etc. and collects
+# stuff
 for path in args.bibkeys:
     new_recids = set()
     if not os.path.exists(path):
