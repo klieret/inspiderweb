@@ -427,9 +427,11 @@ class Database(object):
                 # we have a list and go through it to pick out relevant
                 # information
                 for system in record['system_control_number']:
+                    if "institute" not in system:
+                        continue
                     if system["institute"] == 'arXiv' and "value" in system:
                         arxiv_code = system["value"]
-                    if system["institute"] in ['INSPIRETeX', 'SPIRESTeX'] \
+                    elif system["institute"] in ['INSPIRETeX', 'SPIRESTeX'] \
                             and "value" in system:
                             if bibkey:
                                 # we already met a bibkey, so compare it
