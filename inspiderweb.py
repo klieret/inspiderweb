@@ -39,7 +39,10 @@ parser = argparse.ArgumentParser(description=description,
                                  add_help=False)
 
 setup_options = parser.add_argument_group('Setup/Configure Options',
-                                          'Supply in/output paths...')
+                                          'Supply in/output paths. Note that '
+                                          'in most cases, seeds are only '
+                                          'added to the database, if we '
+                                          'perform some action.')
 action_options = parser.add_argument_group('Action Options',
                                            'What do you want to do?')
 misc_options = parser.add_argument_group('Misc', 'Misc Options')
@@ -49,15 +52,9 @@ setup_options.add_argument("-d", "--database", required=True,
                                 "are supported. In this case the first one "
                                 "will be used to save the resulting merged db",
                            type=str, nargs="+")
-
 setup_options.add_argument("-o", "--output", required=False,
                            help="Output dot file.",
                            type=str)
-# todo: rather allow three options:
-# -s --searchstring: inspire search
-# -r --recids: recids
-# -b --bibkeys: file containing bibkeys (will be regexed). Or directory which
-#               will be recursively regexed.
 setup_options.add_argument("-r", "--recids", required=False,
                            help="Input file with recids as seeds. Multiple "
                                 "files are supported.",
@@ -70,18 +67,39 @@ setup_options.add_argument("-s", "--searchstring", required=False,
                                 "supported.",
                            type=str, nargs="+", default=[])
 setup_options.add_argument("-b", "--bibkeys", required=False,
-                           help="Path of a file or a directory. If the path"
-                                "points to a file, it is searched for "
+                           help="Path of a file or a directory. If the path "
+                                "points to a file, the file is searched for "
                                 "bibkeys, which are then used as seeds. If the"
                                 "path points to a directory, we recursively"
                                 "go into it (excluding hidden files) and "
                                 "search every file for bibkeys.",
                            type=str, nargs="+", default=[])
 
+# fixme: make that accept arguments on what to plot; combine that with what to download
+# todo: make request automatically download stuff it isn't there?
+# a combination of the following:
+# -seeds
+# -seeds.refs
+# -seeds.cites
+# -seeds.refs.refs
+# -seeds.cites.cites
+# similar with all....
+# as for implementation: method takes
+
 action_options.add_argument("-p", "--plot", required=False,
                             action="store_true",
                             help="Generate dot output (i.e. plot).",
                             default=False)
+
+# fixme: rather add a general download option with
+# always download info, get what to download from
+# -seeds
+# -seeds.refs
+# -seeds.cites
+# -seeds.refs.refs
+# -seeds.cites.cites
+# -all
+
 action_options.add_argument("-u", "--updateseeds", required=False,
                             help="Get specified information for the seeds. "
                                  "Multiple arguments are supported. ",
@@ -130,7 +148,6 @@ if args.updateseeds and not args.seeds:
 # .... to export into such
 # todo: add clusters
 # todo: extract more infomration; add title as tooltip
-# todo: control verbosity
 
 db = Database(args.database[0])
 db.load()

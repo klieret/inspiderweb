@@ -26,14 +26,7 @@ A big number of papers which reference each other, sorted by the year the papers
 
 ## How does it work?
 
-Right now for each paper, the following items are extracted:
-
-* The inspirehep bibkey (e.g. ```Penati:2009sw```). It should be easy to extend the script to extract other items from the bibtex file which is provided by inspirehep. 
-* The inspirehep url of all the papers referenced by the paper under consideration
-* The inspirehep url of all the papers which cite the paper under consideration
-* The inspirehep url of all the papers which are cocited with the paper under consideration
-
-This info is then used to generate an output in the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language)), describing the connections between (a subset of) the papers considered. This output can then be used by tools like ```dot```, ```fdp```, ```sfdp``` (provided by the [Graphviz Package](http://www.graphviz.org/)) to print the Graph to ```.png```, ```.pdf``` and many more. 
+Starting from some initial records ("seeds"), inspiderweb uses the inspirehep API to get references citations and other information. This information is then analyzed and used to generate an output in the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language)), describing the connections between (a subset of) the papers considered. This output can then be used by tools like ```dot```, ```fdp```, ```sfdp``` (provided by the [Graphviz Package](http://www.graphviz.org/)) to render the Graph as a ```.png```, ```.pdf``` and many more. 
 
 ## Limitations/Bugs
 
@@ -64,29 +57,38 @@ This info is then used to generate an output in the [dot language](https://en.wi
 
         sudo apt-get install ps2pdf
 
-## Usage
+## Intro/Usage
 
-There are usually several steps involved. See *Tutorial* below for some easy examples.
+Some terms which are used in the following:
 
-1. Run the python script to crawl over an initial set of papers (seeds); let the script extract references and/or citations (as well as the bibkeys). This information will be saved, so that we do not have to redownload it again (unless we want to update).
-2. Download the remaining bibkeys (or general bibliographic info) of the referenced/cited papers.  This information will be saved, so that we do not have to redownload it again (unless we want to update).
-3. Create the Graph in dot language for (a subset of) the discovered information.
-4. Use the ```graphviz``` package to plot a nice graph.
+* ```record```: Record on inspirehep, representing a paper or a similar resource. Also the ```Record``` class, which is used to represent one record in inspiderweb.
+* ```recid```: The record id of a record, e.g. ```1472971``` for the the record at http://inspirehep.net/record/1472971/
+* ```bibkey```: The bibtex label provided by inspirehep, e.g. ```Davies:2016ruz``` for the above record (as can be checked in the bibtex output at http://inspirehep.net/record/1472971/export/hx)
+* ```seed```: Basically initial records that inspiderweb uses as starting point by downloading their references/citations etc. 
+* ```database```: Inspiderweb caches all the downloaded information here. Basically a collection of ```Records``` together with some useful methods.
+
+Usually there are two steps involved to get the graph:
+
+1. Run ```inspiderweb```
+2. Use the ```graphviz``` package to plot a nice graph.
 
 The ```graphviz``` package provides several nice tools that can be used.
 
-* ```dot```: For "Hierarchical" graphcs: ```dot -Tpdf dotfile.dot > dotfile.pdf``` (to generate pdf output) 
+* ```dot```: For "Hierarchical" graphcs: ```dot -Tpdf dotfile.dot > dotfile.pdf``` (to generate pdf output). This will be the most relevant command, especially for huge graphs.
 * ```fdp```: For "Spring models": ```dfp -Tpdf dotfile.dot > dotfile.pdf``` (to generate pdf output) 
 * ```sfdp```: Like ```fdp``` but scales better with bigger networks: ```dfp -Tpdf dotfile.dot > dotfile.pdf``` (to generate pdf output)
 
-All command line options are described in the help message: Run ```python3 inspiderweb.py --help``` to get:
+All command line options of inspiderweb are described in the help message: Run ```python3 inspiderweb.py --help``` to get:
 ```
 usage: python3 inspiderweb.py -d DATABASE [DATABASE ...] [-o OUTPUT]
-                              [-s SEEDS [SEEDS ...]] [-p]
+                              [-r RECIDS [RECIDS ...]]
+                              [-s SEARCHSTRING [SEARCHSTRING ...]]
+                              [-b BIBKEYS [BIBKEYS ...]] [-p]
                               [-u {refs,cites,bib} [{refs,cites,bib} ...]]
                               [-t {refs,cites,bib} [{refs,cites,bib} ...]]
                               [-h] [--rank {year}] [--maxseeds MAXSEEDS]
                               [--forceupdate]
+                              [-v--verbosity {debug,info,warning,error,critical}]
 
     INSPIDERWEB
  `.,-'\_____/`-.,'     Tool to analyze networks papers referencing and citing each
@@ -100,7 +102,7 @@ usage: python3 inspiderweb.py -d DATABASE [DATABASE ...] [-o OUTPUT]
      /       \
 
 Setup/Configure Options:
-  Supply in/output paths...
+  Supply in/output paths. Note that in most cases, seeds are only added to the database, if we perform some action.
 
   -d DATABASE [DATABASE ...], --database DATABASE [DATABASE ...]
                         Pickle database (db) file. Multiple db files are
@@ -108,8 +110,19 @@ Setup/Configure Options:
                         save the resulting merged db
   -o OUTPUT, --output OUTPUT
                         Output dot file.
-  -s SEEDS [SEEDS ...], --seeds SEEDS [SEEDS ...]
-                        Input seed file. Multiple seed files are supported.
+  -r RECIDS [RECIDS ...], --recids RECIDS [RECIDS ...]
+                        Input file with recids as seeds. Multiple files are
+                        supported.
+  -s SEARCHSTRING [SEARCHSTRING ...], --searchstring SEARCHSTRING [SEARCHSTRING ...]
+                        Take the results of inspirehep search query (search
+                        string you would enter in the inspirehep online search
+                        form) as seeds. Multiple search strings supported.
+  -b BIBKEYS [BIBKEYS ...], --bibkeys BIBKEYS [BIBKEYS ...]
+                        Path of a file or a directory. If the path points to a
+                        file, the file is searched for bibkeys, which are then
+                        used as seeds. If thepath points to a directory, we
+                        recursivelygo into it (excluding hidden files) and
+                        search every file for bibkeys.
 
 Action Options:
   What do you want to do?
@@ -130,9 +143,14 @@ Misc:
   --maxseeds MAXSEEDS   Maximum number of seeds (for testing purposes).
   --forceupdate         For all information that we get from the database:
                         Force redownload
+  -v--verbosity {debug,info,warning,error,critical}
+                        Verbosity
+
 ```
 
 ## Tutorial
+
+### Basics
 
 In the following I will always give two lines, the second with the shortcut options, the first one with the longer (and easier to understand options). Instead of ```python3 inspiderweb.py```, you can also use ```python3 inspiderweb.py``` linux (after setting the ```x``` privilege). Note that paths that contain spaces must be enclosed in quotation marks.
 
@@ -156,6 +174,8 @@ Output:
     INFO: Current number of records with cocitations: 0
     INFO: Current number of records with bibkey: 0
     INFO: **************************************************
+
+### Specifying seeds & Downloading information
 
 Add a few seeds (the ids of inspirehep, i.e. the number ```811388``` from ```http://inspirehep.net/record/811388/```) and download the bibinfo and the references. For this we use the example file in ```seeds/example_small.txt```.
 
@@ -186,6 +206,7 @@ Afterwards, if we run the statistics again, we could see that we were successful
     INFO: Current number of records with bibkey: 618
     INFO: **************************************************
 
+### Plotting
 
 Now we are ready to plot the relations between these nodes:
 
@@ -267,6 +288,37 @@ To get the graph sorted by years, simply supply the ```--rank year``` option. Do
     python3 inspiderweb.py -d db/test.pickle -p --rank year -s seeds/example_small.txt -o build/test.dot && dot -Tps2 build/test.dot > build/test.ps && ps2pdf build/test.ps build/test.pdf 
 
 ![tutorial year picture](https://github.com/klieret/readme-files/blob/master/inspiderweb/tutorial_year.png)
+
+## Examples
+
+## Scripting
+
+Mostly works like this:
+
+    db = Database(args.database[0])
+    db.load()
+    recids = ....
+    db.autocomplete_records(..., ...)
+    dg = DotGraph(db)
+    
+    def valid_connection(source, target):
+        .... 
+    
+    for recid, record in db._records.items():
+            for referece_recid in record.references:
+                if not valid_connection(record.recid, referece_recid):
+                    continue
+                dg.add_connection(record.recid, referece_recid)
+            for citation_recid in record.citations:
+                if not valid_connection(record.recid, citation_recid):
+                    continue
+                dg.add_connection(citation_recid, record.recid)
+    
+    dg.generate_dot_str(rank=args.rank)
+    dg.write_to_file(args.output)
+    
+    db.save()    
+
 
 ## License
 

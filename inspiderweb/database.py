@@ -21,7 +21,7 @@ some methods to update/save/cache information.
 """
 
 
-def download(url: str, retries=3, timeout=10, sleep_after=3,
+def download(url: str, retries=3, timeout=10, sleep_after=1,
              raise_exception=False) -> str:
     """ Download from url with automatic retries.
     Also prints logging messages.
@@ -173,6 +173,12 @@ class Database(object):
         """ Update record with id $recid with record $record. """
         self._records[recid] = record
 
+    def autocomplete_records2(self, update: str, force=False, save_every=5,
+                              recids=None, statistics_every=5) -> bool:
+        """ Update: A string of refs and cites, e.g. refs.cites.refs """
+
+
+    # fixme: move loops in separate wrapper function
     def autocomplete_records(self, updates: set, force=False, save_every=5,
                              recids=None, statistics_every=5) -> bool:
         """ Download information for each record from inspirehep.
@@ -193,41 +199,28 @@ class Database(object):
         Returns: True if we actually did something.
         """
 
-        for update in updates:
-            if update not in ["bib", "refs", "cites"]:
-                logger.error("Unrecognize update option {}. "
-                             "I will simply ignore this for "
-                             "now.".format(update))
-                updates.remove(update)
-
-        if not updates:
-            return False
-
         if not recids:
-            recids = self._records.keys()
+            recids = set(self._records.keys())
 
-        logger.debug("Downloading {} for {} records.".format(
-            ', '.join(updates), len(recids)))
+        steps = update.split('.')
+        for step in steps:
+            logger.info("Downloading {} for {} records.".format(step,
+                                                                len(recids)))
 
-        for i, recid in enumerate(recids):
-            if i and i % save_every == 0:
-                self.save()
-            if i and i % statistics_every == 0:
-                self.statistics()
-                # logger.debug("Sleeping a bit longer.")
-                # time.sleep(15)
+            for i, recid in enumerate(recids):
+                if i and i % save_every == 0:
+                    self.save()
+                if i and i % statistics_every == 0:
+                    self.statistics()
 
-            record = self.get_record(recid)
-
-            if "bib" in updates:
-                self.get_info(recid, force=force)
-            if "refs" in updates:
-                self.get_references(recid, force=force)
-            if "cites" in updates:
-                self.get_citations(recid, force=force)
-
-            self.update_record(recid, record)
-
+                if step == "refs":
+                    recids.update(self.get_references(recid, force=force))
+                if step == "cites":
+                    recids.update(self.get_citations(recid, force=force))
+                else:
+                    logger.error("Unrecognize update option {}. "
+                                 "I will simply ignore this for "
+                                 "now.".format(update))
         return True
 
     def load_labels_from_file(self,
