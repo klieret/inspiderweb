@@ -4,12 +4,9 @@ import datetime
 from inspiderweb.log import logger, logcontrol
 from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
-import sys
 import argparse
 from argparse import RawDescriptionHelpFormatter
-import os.path
-import re
-import os
+from inspiderweb.recidextractor import *
 
 """ Main file of inspiderweb: Tool to analyze paper reference networks.
 Currently hosted at: https://github.com/klieret/inspiderweb
@@ -55,7 +52,7 @@ setup_options.add_argument("-d", "--database", required=True,
 setup_options.add_argument("-o", "--output", required=False,
                            help="Output dot file.",
                            type=str)
-# todo: also do the directory option there
+# todo: maybe also do the directory option there
 setup_options.add_argument("-r", "--recids", required=False,
                            help="Input file with recids as seeds. Multiple "
                                 "files are supported.",
@@ -72,6 +69,15 @@ setup_options.add_argument("-b", "--bibkeys", required=False,
                            help="Path of a file or a directory. If the path "
                                 "points to a file, the file is searched for "
                                 "bibkeys, which are then used as seeds. If the"
+                                "path points to a directory, we recursively"
+                                "go into it (excluding hidden files) and "
+                                "search every file for bibkeys.",
+                           type=str, nargs="+", default=[])
+setup_options.add_argument("-i", "--inspirehepurls", required=False,
+                           help="Path of a file or a directory. If the path "
+                                "points to a file, the file is searched for "
+                                "inspirehep urls, from which the recids are "
+                                "extracted and used as seeds. If the"
                                 "path points to a directory, we recursively"
                                 "go into it (excluding hidden files) and "
                                 "search every file for bibkeys.",
@@ -118,6 +124,7 @@ misc_options.add_argument("--rank", required=False,
                           help="Rank by [year]", default="",
                           type=str,
                           choices=["year"])
+# fixme: reimplement
 misc_options.add_argument("--maxseeds", required=False, type=int,
                           help="Maximum number of seeds (for testing "
                                "purposes).",
@@ -154,20 +161,6 @@ db.statistics()
 
 recids = set()
 
-for recidsfile in args.recids:
-    new_recids = set()
-    with open(recidsfile, "r") as seedfile_stream:
-        for i, line in enumerate(seedfile_stream):
-            if (i + 1) == args.maxseeds:
-                # if args.maxseeds == 0 (default), this will never run
-                break
-            line = line.replace('\n', "").strip()
-            if not line:
-                continue
-            new_recids.add(line)
-    logger.info("Got {} seeds from file {}.".format(len(new_recids),
-                                                     recidsfile))
-    recids.update(new_recids)
 
 for search in args.searchstring:
     new_recids = db.get_recids_from_search(search)
@@ -175,41 +168,10 @@ for search in args.searchstring:
                                                             search))
 
 
-def get_bibkeys_from_file(bibpath):
-    bibkey_regex = re.compile(r"[a-zA-Z]{1,20}:[0-9]{4}[a-z]{0,10}")
-    with open(bibpath, "r") as bibfile:
-        bibkeys = set()
-        for bibline in bibfile:
-            bibkeys.update(bibkey_regex.findall(bibline))
-    bibkey_recids = db.get_recids_from_bibkeys(bibkeys).keys()
-    return bibkey_recids
+recids.update(get_recids_from_bibkey_paths(args.bibkeys, db=db))
+recids.update(get_recids_from_recid_paths(args.recids))
 
-# todo: make function that takes a apply_to_file function etc. and collects
-# stuff
-for path in args.bibkeys:
-    new_recids = set()
-    if not os.path.exists(path):
-        logger.critical("Input file {} does not exist. Abort.".format(path))
-        sys.exit(50)
-    if os.path.isdir(path):
-        for root, dirs, files in os.walk(path):
-            # fixme: skip hidden files
-            for file in files:
-                these_new_recids = \
-                    get_bibkeys_from_file(os.path.join(root, file))
-                if these_new_recids:
-                    logger.info("Got {} seeds from bibkeys "
-                                "from file {}.".format(
-                        len(these_new_recids), os.path.join(root, file)))
-
-    if os.path.isfile(path):
-        new_recids = get_bibkeys_from_file(path)
-        recids.update(new_recids)
-        logger.info("Got {} seeds from bibkeys from file {}.".format(
-            len(new_recids), path))
-
-db.autocomplete_records(args.update, force=args.forceupdate,
-                        recids=recids)
+db.autocomplete_records(args.update, force=args.forceupdate, recids=recids)
 
 if args.plot:
 
