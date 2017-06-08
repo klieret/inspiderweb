@@ -387,7 +387,7 @@ class Database(object):
             # todo: maybe use merge instead
             recids.append(recid)
             record = self.get_record(recid)
-            if record.bibkey:
+            if record.bibkey and bibkey:
                 assert record.bibkey == bibkey
             else:
                 record.bibkey = bibkey
