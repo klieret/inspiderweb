@@ -420,19 +420,24 @@ class Database(object):
             recid = str(record['recid'])
             bibkey = ""
             arxiv_code = ""
+            if 'system_control_number' not in record:
+                # this clearly shouldn't happen, because we requested this
+                # tag
+                logger.error("Key 'system_control_number' not found. This "
+                             "shouldn't happen. "
+                             "Full string: {}".format(record))
             if not isinstance(record['system_control_number'], list):
                 # if there is only one value here, than this is not a list
                 # and in this case the only value supplied should be the
                 # bibtex key
                 system = record['system_control_number']
                 if "institute" in system and \
-                            system["institute"] in ['INSPIRETeX', 'SPIRESTeX']\
-                            and "value" in system:
+                    system["institute"] in ['INSPIRETeX', 'SPIRESTeX']\
+                        and "value" in system:
                     bibkey = system["value"]
                 else:
-                    logger.warning("Did not get a bibkey for record {}".format(
-                        recid))
-            else:
+                    logger.warning("Did not get a bibkey for record {}"
+                                   "".format(recid))
                 # we have a list and go through it to pick out relevant
                 # information
                 for system in record['system_control_number']:
