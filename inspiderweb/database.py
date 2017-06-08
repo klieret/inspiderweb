@@ -367,6 +367,7 @@ class Database(object):
                 if not isinstance(system, dict):
                     logger.error("{} is not a dict. This shouldn't "
                                  "happen.".format(system))
+                    continue
                 if "institute" not in system:
                     logger.error("{} does not contain the key 'institute'."
                                  "This shouldn't happen.".format(system))
