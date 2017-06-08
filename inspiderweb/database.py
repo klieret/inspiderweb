@@ -88,8 +88,9 @@ class Database(object):
             sum([int(r.cocitations_dl) for recid, r in
                  self._records.items()])))
         logger.info("Current number of records with bibkey: {}".format(
-            sum([int(bool(r.bibkey)) for recid, r in self._records.items()])
-        ))
+            sum([int(bool(r.bibkey)) for recid, r in self._records.items()])))
+        logger.info("Current number of records with custom label: {}".format(
+            sum([int(bool(r.custom_label)) for recid, r in self._records.items()])))
         logger.info("*"*50)
 
     def load(self, path="") -> bool:

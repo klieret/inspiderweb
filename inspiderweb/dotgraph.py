@@ -86,7 +86,7 @@ class DotGraph(object):
 
             # fixme: style shouldn't be defined here
             self._dot_str += "\t{\n\t\tnode [shape=circle, fontsize=20, " \
-                             "style=filled, color=yellow];\n"
+                             "style=filled, color=yellow, fontcolor=black];\n"
             self._dot_str += "\t\t" + "->".join(
                 list(sorted(node_ids_by_year.keys(), reverse=True))) + ";\n"
             self._dot_str += "\t}\n"

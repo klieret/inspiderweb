@@ -176,6 +176,8 @@ recids.update(get_recids_from_bibkey_paths(args.bibkeys, db=db))
 recids.update(get_recids_from_recid_paths(args.recids))
 recids.update(get_recids_from_url_paths(args.inspirehepurls))
 
+db.load_labels_from_file(args.inspirehepurls[0])
+
 db.autocomplete_records(args.update, force=args.forceupdate, recids=recids)
 
 if args.plot:
@@ -186,11 +188,11 @@ if args.plot:
     # EXCEPT THINGS IN SQUARE BRACKETS: USE COMMA
     # todo: move that to config or something
     graph_style = \
-        "graph [label=\"inspiderweb {date} {time}\", fontsize=40];".format(
+        "graph [label=\"inspiderweb {date} {time}\", fontsize=60];".format(
             date=str(datetime.date.today()),
             time=str(datetime.datetime.now().time()))
-    node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, " \
-                 "style=filled, color=green];"
+    node_style = "node[fontsize=25, fontcolor=black, fontname=Arial, " \
+                 "style=filled, color=red, fontcolor=white, shape=note];"
     # size = 'ratio="0.3";'#''size="14,10";'
     # size = 'overlap=prism; overlap_scaling=0.01; ratio=0.7'
     size = ";"
