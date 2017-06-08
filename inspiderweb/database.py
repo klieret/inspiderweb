@@ -355,8 +355,13 @@ class Database(object):
                 # and in this case the only value supplied should be the
                 # bibtex key
                 system = record['system_control_number']
-                assert system["institute"] in ['INSPIRETeX', 'SPIRESTeX']
-                bibkey = system["value"]
+                if "institute" in system and \
+                    system["institute"] in ['INSPIRETeX', 'SPIRESTeX']\
+                        and "value" in system:
+                    bibkey = system["value"]
+                else:
+                    logger.warning("Did not get a bibkey for record {}"
+                                   "".format(recid))
             else:
                 # we have a list and go through it to pick out relevant
                 # information
