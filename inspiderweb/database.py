@@ -416,33 +416,44 @@ class Database(object):
             recid = str(record['recid'])
             bibkey = ""
             arxiv_code = ""
-            if not isinstance(record['system_control_number'], list):
-                # if there is only one value here, than this is not a list
-                # and in this case the only value supplied should be the
-                # bibtex key
-                system = record['system_control_number']
-                assert system["institute"] in ['INSPIRETeX', 'SPIRESTeX']
-                bibkey = system["value"]
+            if 'system_control_number' not in record:
+                # this clearly shouldn't happen, because we requested this
+                # tag
+                logger.error("Key 'system_control_number' not found. This "
+                             "shouldn't happen. "
+                             "Full string: {}".format(record))
+                continue
+
+            if isinstance(record['system_control_number'], list):
+                systems = record['system_control_number']
             else:
-                # we have a list and go through it to pick out relevant
-                # information
-                for system in record['system_control_number']:
-                    if "institute" not in system:
-                        continue
-                    if system["institute"] == 'arXiv' and "value" in system:
-                        arxiv_code = system["value"]
-                    elif system["institute"] in ['INSPIRETeX', 'SPIRESTeX'] \
-                            and "value" in system:
-                            if bibkey:
-                                # we already met a bibkey, so compare it
-                                # with this one
-                                assert bibkey == system["value"]
-                            else:
-                                bibkey = system["value"]
+                systems = [record['system_control_number']]
+
+            for system in systems:
+                if not isinstance(system, dict):
+                    logger.error("{} is not a dict. This shouldn't "
+                                 "happen.".format(system))
+                    continue
+                if "institute" not in system:
+                    logger.error("{} does not contain the key 'institute'."
+                                 "This shouldn't happen.".format(system))
+                    continue
+
+                if system["institute"] == 'arXiv' and "value" in system:
+                    arxiv_code = system["value"]
+                elif system["institute"] in ['INSPIRETeX', 'SPIRESTeX'] \
+                        and "value" in system:
+                        if bibkey:
+                            # we already met a bibkey, so compare it
+                            # with this one
+                            assert bibkey == system["value"]
+                        else:
+                            bibkey = system["value"]
+
             # todo: maybe use merge instead
             recids.append(recid)
             record = self.get_record(recid)
-            if record.bibkey:
+            if record.bibkey and bibkey:
                 assert record.bibkey == bibkey
             else:
                 record.bibkey = bibkey
