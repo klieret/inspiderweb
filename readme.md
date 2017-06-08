@@ -81,13 +81,12 @@ The ```graphviz``` package provides several nice tools that can be used.
 All command line options of inspiderweb are described in the help message: Run ```python3 inspiderweb.py --help``` to get:
 ```
 usage: python3 inspiderweb.py -d DATABASE [DATABASE ...] [-o OUTPUT]
-                              [-r RECIDS [RECIDS ...]]
-                              [-s SEARCHSTRING [SEARCHSTRING ...]]
-                              [-b BIBKEYS [BIBKEYS ...]] [-p]
-                              [-u {refs,cites,bib} [{refs,cites,bib} ...]]
-                              [-t {refs,cites,bib} [{refs,cites,bib} ...]]
-                              [-h] [--rank {year}] [--maxseeds MAXSEEDS]
-                              [--forceupdate]
+                              [-r RECIDFILESS [RECIDFILESS ...]]
+                              [-q QUERIES [QUERIES ...]]
+                              [-b BIBKEYFILES [BIBKEYFILES ...]]
+                              [-u URLSFILES [URLSFILES ...]] [-p]
+                              [-g GET [GET ...]] [-h] [--rank {year}]
+                              [--maxseeds MAXSEEDS] [--forceupdate]
                               [-v--verbosity {debug,info,warning,error,critical}]
 
     INSPIDERWEB
@@ -102,7 +101,7 @@ usage: python3 inspiderweb.py -d DATABASE [DATABASE ...] [-o OUTPUT]
      /       \
 
 Setup/Configure Options:
-  Supply in/output paths. Note that in most cases, seeds are only added to the database, if we perform some action.
+  Supply in/output paths. Note that in most cases, seeds are only added to the database if we perform some action.
 
   -d DATABASE [DATABASE ...], --database DATABASE [DATABASE ...]
                         Pickle database (db) file. Multiple db files are
@@ -110,30 +109,46 @@ Setup/Configure Options:
                         save the resulting merged db
   -o OUTPUT, --output OUTPUT
                         Output dot file.
-  -r RECIDS [RECIDS ...], --recids RECIDS [RECIDS ...]
+  -r RECIDFILESS [RECIDFILESS ...], --recidfiless RECIDFILESS [RECIDFILESS ...]
                         Input file with recids as seeds. Multiple files are
                         supported.
-  -s SEARCHSTRING [SEARCHSTRING ...], --searchstring SEARCHSTRING [SEARCHSTRING ...]
+  -q QUERIES [QUERIES ...], --queries QUERIES [QUERIES ...]
                         Take the results of inspirehep search query (search
                         string you would enter in the inspirehep online search
                         form) as seeds. Multiple search strings supported.
-  -b BIBKEYS [BIBKEYS ...], --bibkeys BIBKEYS [BIBKEYS ...]
+  -b BIBKEYFILES [BIBKEYFILES ...], --bibkeyfiles BIBKEYFILES [BIBKEYFILES ...]
                         Path of a file or a directory. If the path points to a
                         file, the file is searched for bibkeys, which are then
                         used as seeds. If thepath points to a directory, we
                         recursivelygo into it (excluding hidden files) and
                         search every file for bibkeys.
+  -u URLSFILES [URLSFILES ...], --urlsfiles URLSFILES [URLSFILES ...]
+                        Path of a file or a directory. If the path points to a
+                        file, the file is searched for inspirehep urls, from
+                        which the recids are extracted and used as seeds. If
+                        thepath points to a directory, we recursivelygo into
+                        it (excluding hidden files) and search every file for
+                        bibkeys.
 
 Action Options:
   What do you want to do?
 
   -p, --plot            Generate dot output (i.e. plot).
-  -u {refs,cites,bib} [{refs,cites,bib} ...], --updateseeds {refs,cites,bib} [{refs,cites,bib} ...]
-                        Get specified information for the seeds. Multiple
-                        arguments are supported.
-  -t {refs,cites,bib} [{refs,cites,bib} ...], --updatedb {refs,cites,bib} [{refs,cites,bib} ...]
-                        Get specified information for the records in the
-                        database. Multiple arguments are supported.
+  -g GET [GET ...], --get GET [GET ...]
+                        Download information. Multiple arguments are
+                        supported. Each argument must look like this: Starts
+                        with 'seeds' or 'all' (depending on whether every db
+                        entry or just the seeds will be taken as starting
+                        point). Just 'seeds' (short 's') or 'all' (short 'a')
+                        will only download the bibliographic information for
+                        every item. Furthermore, there are the following
+                        options: (1) 'refs' (short 'r'): References of each
+                        recid (2) 'cites' (short 'c'): Citations of each recid
+                        (3) 'refscites' or 'citesrefs' (short 'rc' or 'cr'):
+                        both. These options can be chained, e.g.
+                        seeds.refs.cites means 1. For each seed recid, get all
+                        reference 2. For all of the above, get all citations.
+                        Similarly one could have written 's.r.c'.
 
 Misc:
   Misc Options
@@ -145,7 +160,6 @@ Misc:
                         Force redownload
   -v--verbosity {debug,info,warning,error,critical}
                         Verbosity
-
 ```
 
 ## Tutorial
@@ -179,8 +193,8 @@ Output:
 
 Add a few seeds (the ids of inspirehep, i.e. the number ```811388``` from ```http://inspirehep.net/record/811388/```) and download the bibinfo and the references. For this we use the example file in ```seeds/example_small.txt```.
 
-    python3 inspiderweb.py --database db/test.pickle --seeds seeds/example_small.txt --updateseeds bib refs
-    python3 inspiderweb.py -d db/test.pickle -s seeds/example_small.txt -u bib refs
+    python3 inspiderweb.py --database db/test.pickle --recidpaths seeds/example_small.txt --get seed.citesrefs
+    python3 inspiderweb.py -d db/test.pickle -r seeds/example_small.txt g s.cr
    
 This can take some time (around a minute, mainly because the script waits quite often to not overload the inspirehep server), while we see output like: 
 
@@ -210,8 +224,8 @@ Afterwards, if we run the statistics again, we could see that we were successful
 
 Now we are ready to plot the relations between these nodes:
 
-    python3 inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --output build/test.dot
-    python3 inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -o build/test.dot
+    python3 inspiderweb.py --database db/test.pickle --plot --recidpaths seeds/example_small.txt --output build/test.dot
+    python3 inspiderweb.py -d db/test.pickle -p -r seeds/example_small.txt -o build/test.dot
 
 This will produce the file ```build/test.dot``` (I chose to place all of the output files in the ```build``` repository as to not make the repository dirty):
 
@@ -250,8 +264,8 @@ This will produce the file ```build/test.dot``` (I chose to place all of the out
 
 Note that we could also have done all of the above with just one command:
 
-    python3 inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_small.txt --updateseeds bib refs --output build/test.dot
-    python3 inspiderweb.py -d db/test.pickle -p -s seeds/example_small.txt -u bib refs -o build/test.dot
+    python3 inspiderweb.py --database db/test.pickle --plot --recidpaths seeds/example_small.txt --get bib refs --output build/test.dot
+    python3 inspiderweb.py -d db/test.pickle -p -r seeds/example_small.txt -u bib refs -o build/test.dot
 
 Note that running this should (basically) run straight through, without downloading anything, as all the information was saved in the database: This gives output like
 

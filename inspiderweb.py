@@ -52,20 +52,18 @@ setup_options.add_argument("-d", "--database", required=True,
 setup_options.add_argument("-o", "--output", required=False,
                            help="Output dot file.",
                            type=str)
-# todo: maybe also do the directory option there
-setup_options.add_argument("-r", "--recids", required=False,
+setup_options.add_argument("-r", "--recidpaths", required=False,
                            help="Input file with recids as seeds. Multiple "
                                 "files are supported.",
                            type=str, nargs="+", default=[])
-# todo: additional option -u -urls that uses regexs to catch inspirehep urls.
-setup_options.add_argument("-s", "--searchstring", required=False,
+setup_options.add_argument("-q", "--queries", required=False,
                            help="Take the results of inspirehep search query "
                                 "(search string you would enter in the "
                                 "inspirehep online search "
                                 "form) as seeds. Multiple search strings "
                                 "supported.",
                            type=str, nargs="+", default=[])
-setup_options.add_argument("-b", "--bibkeys", required=False,
+setup_options.add_argument("-b", "--bibkeypaths", required=False,
                            help="Path of a file or a directory. If the path "
                                 "points to a file, the file is searched for "
                                 "bibkeys, which are then used as seeds. If the"
@@ -73,7 +71,7 @@ setup_options.add_argument("-b", "--bibkeys", required=False,
                                 "go into it (excluding hidden files) and "
                                 "search every file for bibkeys.",
                            type=str, nargs="+", default=[])
-setup_options.add_argument("-i", "--inspirehepurls", required=False,
+setup_options.add_argument("-u", "--urlpaths", required=False,
                            help="Path of a file or a directory. If the path "
                                 "points to a file, the file is searched for "
                                 "inspirehep urls, from which the recids are "
@@ -116,7 +114,7 @@ update_help = "Download information. Multiple arguments are supported. " \
               "2. For all of the above, get all citations. " \
               "Similarly one could have written 's.r.c'. "
 
-action_options.add_argument("-u", "--update", required=False,
+action_options.add_argument("-g", "--get", required=False,
                             help=update_help,
                             type=str, default="", nargs="+")
 
@@ -164,12 +162,12 @@ db.statistics()
 recids = set()
 
 
-recids.update(get_recid_from_queries(args.searchstring, db=db))
-recids.update(get_recids_from_bibkey_paths(args.bibkeys, db=db))
-recids.update(get_recids_from_recid_paths(args.recids))
-recids.update(get_recids_from_url_paths(args.inspirehepurls))
+recids.update(get_recid_from_queries(args.queries, db=db))
+recids.update(get_recids_from_bibkey_paths(args.bibkeypaths, db=db))
+recids.update(get_recids_from_recid_paths(args.recidpaths))
+recids.update(get_recids_from_url_paths(args.urlpaths))
 
-db.autocomplete_records(args.update, force=args.forceupdate, recids=recids)
+db.autocomplete_records(args.get, force=args.forceupdate, recids=recids)
 
 if args.plot:
 
