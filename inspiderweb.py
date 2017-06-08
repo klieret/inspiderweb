@@ -85,6 +85,8 @@ setup_options.add_argument("-i", "--inspirehepurls", required=False,
 
 # fixme: make that accept arguments on what to plot; combine that with what to download
 # todo: make request automatically download stuff it isn't there?
+# mayybe it's best to always use db.get_citations and db.get_... instead of
+# gettingn the record and using its internal variables...
 # a combination of the following:
 # -seeds
 # -seeds.refs
