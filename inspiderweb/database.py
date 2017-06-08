@@ -457,7 +457,7 @@ class Database(object):
             recids.append(recid)
             record = self.get_record(recid)
             # fixme: Set record.info_dl?
-            if record.bibkey:
+            if record.bibkey and bibkey:
                 assert record.bibkey == bibkey
             else:
                 record.bibkey = bibkey
