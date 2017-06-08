@@ -2,16 +2,10 @@ language: python
 python:
   - "3.4"
   - "3.5"
-install: "pip install -r requirements.txt"
-script: 
+install:
+  - "pip install -r requirements.txt"
+  - graphviz
+script:
   - "python3 -m unittest discover -v"
-  - "python3 inspiderweb.py --help"
-  - "python3 inspiderweb.py --h"
-  - "python3 inspiderweb.py --database db/test.pickle"
-  - "python3 inspiderweb.py -d db/test.pickle"
-  - "python3 inspiderweb.py --database db/test.pickle --seeds seeds/example_minimal.txt --updateseeds bib refs"
-  - "python3 inspiderweb.py -d db/test.pickle -s seeds/example_minimal.txt -u bib refs"
-  - "python3 inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_minimal.txt --output build/test.dot"
-  - "python3 inspiderweb.py -d db/test.pickle -p -s seeds/example_minimal.txt -o build/test.dot"
-  - "python3 inspiderweb.py --database db/test.pickle --plot --seeds seeds/example_minimal.txt --updateseeds bib refs --output build/test.dot"
-  - "python3 inspiderweb.py -d db/test.pickle -p -s seeds/example_minimal.txt -u bib refs -o build/test.dot"
+  - "grep \"    python3 inspiderweb.py\" readme.md > test_tutorial.sh"
+  - "sh test_tutorial.sh"
