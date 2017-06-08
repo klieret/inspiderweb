@@ -299,7 +299,7 @@ To get ```.pdf``` output with clickable nodes, we cannot use ```-Tpdf``` however
 
 To get the graph sorted by years, simply supply the ```--rank year``` option. Doing all of this in one line (connecting different commands with ```&&```):
 
-    python3 inspiderweb.py -d db/test.pickle -p --rank year -s seeds/example_small.txt -o build/test.dot && dot -Tps2 build/test.dot > build/test.ps && ps2pdf build/test.ps build/test.pdf 
+    python3 inspiderweb.py -d db/test.pickle -p --rank year -r seeds/example_small.txt -o build/test.dot && dot -Tps2 build/test.dot > build/test.ps && ps2pdf build/test.ps build/test.pdf 
 
 ![tutorial year picture](https://github.com/klieret/readme-files/blob/master/inspiderweb/tutorial_year.png)
 
