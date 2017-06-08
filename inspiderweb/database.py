@@ -438,6 +438,7 @@ class Database(object):
                 else:
                     logger.warning("Did not get a bibkey for record {}"
                                    "".format(recid))
+            else:
                 # we have a list and go through it to pick out relevant
                 # information
                 for system in record['system_control_number']:
