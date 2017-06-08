@@ -366,7 +366,7 @@ class Database(object):
     #     return True
 
     def get_recids_from_search(self, searchstring: str,
-                               record_group=25) -> set:
+                               record_group=250) -> set:
         # Long responses are split into chunks of $record_group records
         # so we need an additional loop.
         record_offset = 0
@@ -405,7 +405,7 @@ class Database(object):
                       p=urllib.parse.quote_plus(searchstring),  # search query
                       of="recjson",  # output format
                       ot="recid,system_control_number",  # output tags
-                      rg=record_group,  # how many results/records (default 25)
+                      rg=record_group,  # number of records (def: 25, max: 250)
                       jrec=record_offset)  # result offset
         api_url = base_url + api_string
         result = download(api_url)
@@ -425,8 +425,13 @@ class Database(object):
                 # and in this case the only value supplied should be the
                 # bibtex key
                 system = record['system_control_number']
-                assert system["institute"] in ['INSPIRETeX', 'SPIRESTeX']
-                bibkey = system["value"]
+                if "institute" in system and \
+                            system["institute"] in ['INSPIRETeX', 'SPIRESTeX']\
+                            and "value" in system:
+                    bibkey = system["value"]
+                else:
+                    logger.warning("Did not get a bibkey for record {}".format(
+                        recid))
             else:
                 # we have a list and go through it to pick out relevant
                 # information
@@ -446,6 +451,7 @@ class Database(object):
             # todo: maybe use merge instead
             recids.append(recid)
             record = self.get_record(recid)
+            # fixme: Set record.info_dl?
             if record.bibkey:
                 assert record.bibkey == bibkey
             else:
