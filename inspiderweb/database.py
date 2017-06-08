@@ -350,6 +350,12 @@ class Database(object):
             recid = str(record['recid'])
             bibkey = ""
             arxiv_code = ""
+            if 'system_control_number' not in record:
+                # this clearly shouldn't happen, because we requested this
+                # tag
+                logger.error("Key 'system_control_number' not found. This "
+                             "shouldn't happen. "
+                             "Full string: {}".format(record))
             if not isinstance(record['system_control_number'], list):
                 # if there is only one value here, than this is not a list
                 # and in this case the only value supplied should be the
