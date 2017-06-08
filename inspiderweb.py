@@ -164,12 +164,7 @@ db.statistics()
 recids = set()
 
 
-for search in args.searchstring:
-    new_recids = db.get_recids_from_search(search)
-    logger.info("Got {} seeds from search query {}.".format(len(new_recids),
-                                                            search))
-
-
+recids.update(get_recid_from_queries(args.searchstring, db=db))
 recids.update(get_recids_from_bibkey_paths(args.bibkeys, db=db))
 recids.update(get_recids_from_recid_paths(args.recids))
 recids.update(get_recids_from_url_paths(args.inspirehepurls))
