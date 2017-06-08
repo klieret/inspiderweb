@@ -5,7 +5,7 @@ import os.path
 import re
 import time
 from .log import logger
-from typing import List
+from typing import List, Set
 import socket
 import urllib.request
 import urllib.parse
@@ -85,7 +85,8 @@ class Database(object):
         logger.info("Current number of records with citations: {}".format(
             sum([int(r.citations_dl) for recid, r in self._records.items()])))
         logger.info("Current number of records with cocitations: {}".format(
-            sum([int(r.cocitations_dl) for recid, r in self._records.items()])))
+            sum([int(r.cocitations_dl) for recid, r in
+                 self._records.items()])))
         logger.info("Current number of records with bibkey: {}".format(
             sum([int(bool(r.bibkey)) for recid, r in self._records.items()])
         ))
@@ -174,12 +175,13 @@ class Database(object):
         """ Update record with id $recid with record $record. """
         self._records[recid] = record
 
-    def autocomplete_records(self, updates: List[str], force=False, save_every=5,
-                             recids=None, statistics_every=5) -> set:
+    def autocomplete_records(self, updates: Set[str], force=False,
+                             save_every=5, recids=None,
+                             statistics_every=5) -> set:
         """ Download information for each record from inspirehep.
 
         Args:
-            updates (list of strings): 
+            updates (set of strings): 
                 Which information should be downloaded? There are the 
                 following basic options:
                 * empty string: Bibliographic info of 
@@ -209,6 +211,7 @@ class Database(object):
             recids.update(self._autocomplete_records(update, force=force,
                           save_every=save_every, recids=recids,
                           statistics_every=statistics_every))
+        return recids
 
     def _autocomplete_records(self, update: str, force=False, save_every=5,
                               recids=None, statistics_every=5) -> set:
@@ -362,7 +365,8 @@ class Database(object):
     #     record.cocitations_dl = True
     #     return True
 
-    def get_recids_from_search(self, searchstring: str, record_group=25) -> set:
+    def get_recids_from_search(self, searchstring: str,
+                               record_group=25) -> set:
         # Long responses are split into chunks of $record_group records
         # so we need an additional loop.
         record_offset = 0

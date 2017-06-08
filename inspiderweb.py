@@ -54,8 +54,14 @@ setup_options.add_argument("-o", "--output", required=False,
                            type=str)
 # todo: maybe also do the directory option there
 setup_options.add_argument("-r", "--recids", required=False,
-                           help="Input file with recids as seeds. Multiple "
-                                "files are supported.",
+                           help="Path of a file or a directory. Multiple paths"
+                                "are supported. If the path "
+                                "points to a file, each line of the file is "
+                                "interpreted as a recid. The collected recids"
+                                "are then used as seeds. If the"
+                                "path points to a directory, we recursively"
+                                "go into it (excluding hidden files) and "
+                                "extract recids from every file.",
                            type=str, nargs="+", default=[])
 # todo: additional option -u -urls that uses regexs to catch inspirehep urls.
 setup_options.add_argument("-s", "--searchstring", required=False,
@@ -66,7 +72,8 @@ setup_options.add_argument("-s", "--searchstring", required=False,
                                 "supported.",
                            type=str, nargs="+", default=[])
 setup_options.add_argument("-b", "--bibkeys", required=False,
-                           help="Path of a file or a directory. If the path "
+                           help="Path of a file or a directory. Multiple paths"
+                                "are supported. If the path "
                                 "points to a file, the file is searched for "
                                 "bibkeys, which are then used as seeds. If the"
                                 "path points to a directory, we recursively"

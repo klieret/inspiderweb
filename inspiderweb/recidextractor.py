@@ -22,7 +22,7 @@ easier.
 """
 
 
-def get_recids_from_paths(paths: List[str], function, db=None) -> set():
+def get_recids_from_paths(paths: List[str], extractor, db=None) -> set():
     """ Iterate over $paths. If $path points to a file, apply
     $function($path, db=$db) and add the returned values to a set.
     If $path points to a directory, walk through
@@ -30,7 +30,7 @@ def get_recids_from_paths(paths: List[str], function, db=None) -> set():
 
     Args:
         paths (list(str)): List of paths of directories or files.
-        function: Function that should be applied to every file.
+        extractor: Function that should be applied to every file.
         db: Database instance (depending on the function, this can be left
             empty
     Returns:
@@ -46,21 +46,22 @@ def get_recids_from_paths(paths: List[str], function, db=None) -> set():
                 # fixme: skip hidden files
                 for file in files:
                     these_new_recids = \
-                        function(os.path.join(root, file), db=db)
+                        extractor(os.path.join(root, file), db=db)
                     if these_new_recids:
-                        logger.info("Got {} seeds from bibkeys "
-                                    "from file {}.".format(
-                            len(these_new_recids), os.path.join(root, file)))
+                        logger.info("Got {} seeds from bibkeys from file "
+                                    "{}.".format(len(these_new_recids),
+                                                 os.path.join(root, file)))
                     new_recids.update(these_new_recids)
 
         if os.path.isfile(path):
-            these_new_recids = function(path, db=db)
+            these_new_recids = extractor(path, db=db)
             new_recids.update(these_new_recids)
             logger.info("Got {} seeds from bibkeys from file {}.".format(
                 len(these_new_recids), path))
     return new_recids
 
 
+# noinspection PyUnusedLocal
 def get_recids_from_recid_file(path: str, db=None) -> set():
     """ Get recids from a file that only contains recids.
     Args:
@@ -79,6 +80,7 @@ def get_recids_from_recid_file(path: str, db=None) -> set():
     return new_recids
 
 
+# noinspection PyUnusedLocal
 def get_recids_from_recid_paths(paths: List[str], db=None) -> set():
     """ Get recids from a list of paths.
     If a $path points to a file, we get interpret every line as a recid
@@ -127,6 +129,7 @@ def get_recids_from_bibkey_paths(paths: List[str], db) -> set():
     return get_recids_from_paths(paths, get_recids_from_bibkey_file, db=db)
 
 
+# noinspection PyUnusedLocal
 def get_recids_from_url_file(path: str, db=None) -> set():
     """ Get recids from a file that contains (among others) inspirehep urls,
     such as "http://inspirehep.net/record/566620/references" or similar.
@@ -145,6 +148,7 @@ def get_recids_from_url_file(path: str, db=None) -> set():
     return new_recids
 
 
+# noinspection PyUnusedLocal
 def get_recids_from_url_paths(paths: List[str], db=None) -> set():
     """ Get recids from a list of paths.
     If a $path points to a file, we search it for inspirehep urls which are
