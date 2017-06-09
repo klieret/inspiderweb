@@ -53,8 +53,14 @@ setup_options.add_argument("-o", "--output", required=False,
                            help="Output dot file.",
                            type=str)
 setup_options.add_argument("-r", "--recidpaths", required=False,
-                           help="Input file with recids as seeds. Multiple "
-                                "files are supported.",
+                           help="Path of a file or a directory. Multiple paths"
+                                "are supported. If the path "
+                                "points to a file, each line of the file is "
+                                "interpreted as a recid. The collected recids"
+                                "are then used as seeds. If the"
+                                "path points to a directory, we recursively"
+                                "go into it (excluding hidden files) and "
+                                "extract recids from every file.",
                            type=str, nargs="+", default=[])
 setup_options.add_argument("-q", "--queries", required=False,
                            help="Take the results of inspirehep search query "
@@ -64,7 +70,8 @@ setup_options.add_argument("-q", "--queries", required=False,
                                 "supported.",
                            type=str, nargs="+", default=[])
 setup_options.add_argument("-b", "--bibkeypaths", required=False,
-                           help="Path of a file or a directory. If the path "
+                           help="Path of a file or a directory. Multiple paths"
+                                "are supported. If the path "
                                 "points to a file, the file is searched for "
                                 "bibkeys, which are then used as seeds. If the"
                                 "path points to a directory, we recursively"
@@ -257,7 +264,6 @@ def valid_connection(source_recid, target_recid, rule, seeds, db=None):
     end_rule_steps = end_rule.split('.')
 
 
-
 if args.plot:
 
     dg = DotGraph(db)
@@ -266,11 +272,11 @@ if args.plot:
     # EXCEPT THINGS IN SQUARE BRACKETS: USE COMMA
     # todo: move that to config or something
     graph_style = \
-        "graph [label=\"inspiderweb {date} {time}\", fontsize=40];".format(
+        "graph [label=\"inspiderweb {date} {time}\", fontsize=60];".format(
             date=str(datetime.date.today()),
             time=str(datetime.datetime.now().time()))
-    node_style = "node[fontsize=20, fontcolor=black, fontname=Arial, " \
-                 "style=filled, color=green];"
+    node_style = "node[fontsize=25, fontcolor=black, fontname=Arial, " \
+                 "style=filled, color=red, fontcolor=white, shape=note];"
     # size = 'ratio="0.3";'#''size="14,10";'
     # size = 'overlap=prism; overlap_scaling=0.01; ratio=0.7'
     size = ";"

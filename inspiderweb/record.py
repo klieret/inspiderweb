@@ -61,10 +61,13 @@ class Record(object):
     @property
     def label(self):
         if self.bibkey:
-            return self.bibkey
-        if self.custom_label:
+            if self.custom_label:
+                return "{} ({})".format(self.bibkey, self.custom_label)
+            else:
+                return self.bibkey
+        elif self.custom_label:
             return self.custom_label
-        return self.inspire_url.split("/")[-1]
+        return self.recid
 
     def __str__(self):
         return str(self.__dict__)
