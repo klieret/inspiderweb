@@ -121,8 +121,7 @@ class DotGraph(object):
                 self._dot_str += "\t}\n"
 
     def _draw_nodes(self) -> None:
-        """ Draw nodes/style nodes (assign label etc.)
-        """
+        """ Draw nodes/style nodes (assign label etc.) """
 
         for node_id in self._all_node_ids:
             if node_id not in self._node_styles or not \
@@ -176,6 +175,11 @@ class DotGraph(object):
 
 # todo: docstrings
 def valid_node(recid, rule, seeds, db=None):
+    """ Based on the rule $rule and the seeds $seeds that were given as
+    parameters, return True if the recid $recid is of interest for us.
+    E.g. if the rule is "all.refs", return true if the recid is referenced
+    by any paper in the database. See the documentation of the command
+    line arguments for more on this syntax. """
     steps = rule.split('.')
     if len(steps) == 1:
         if steps[0] in ["all", "a"]:
@@ -228,8 +232,14 @@ def valid_node(recid, rule, seeds, db=None):
     return True
 
 
-# todo: docstrings
 def valid_connection(source_recid, target_recid, rules, seeds, db=None):
+    """ Based on the rules $rules and the seeds $seeds that were given as
+    parameters, return True if the connection $source_recid >  $target_recid
+    should be plotted.
+    E.g. for the rules ["seeds.refs > seeds", "seeds>all"], return True for all
+    connections of references of seeds to the seeds and any connection of the
+    seeds to anything.
+    See the command line arguments for more information."""
     for rule in rules:
         try:
             source_rule, target_rule = rule.split('>')
