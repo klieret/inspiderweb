@@ -1,6 +1,7 @@
 import re
 import collections
 from .log import logger
+import sys
 
 """ Part of inspiderweb: Tool to analyze paper reference networks.
 Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
@@ -171,3 +172,72 @@ class DotGraph(object):
         """
         with open(path, "w") as dotfile:
             dotfile.write(self._dot_str)
+
+
+# todo: docstrings
+def valid_node(recid, rule, seeds, db=None):
+    steps = rule.split('.')
+    if len(steps) == 1:
+        if steps[0] in ["all", "a"]:
+            if recid not in db._record:
+                return False
+        elif steps[0] in ["seeds", "s"]:
+            if recid not in seeds:
+                return False
+        else:
+            logger.error("Wrong keywords in  }".format(steps[0]))
+    elif len(steps) == 2:
+        if steps[0] in ["all", "a"]:
+            # if we use "all", we do not need the seeds anyway
+            seeds = db._records
+        elif steps[0] in ["seeds", "s"]:
+            pass
+        else:
+            logger.error("Wrong keywords in {}".format(steps[0]))
+            sys.exit(54)
+
+        if steps[1] in ["refs", "r"]:
+            is_ref = False
+            for recid in seeds:
+                if recid in db.get_record(recid).references:
+                    is_ref = True
+                    break
+            if not is_ref:
+                return False
+        if steps[1] in ["cites", "c"]:
+            is_cite = False
+            for recid in seeds:
+                if recid in db.get_record(recid).citations:
+                    is_cite = True
+                    break
+            if not is_cite:
+                return False
+        if steps[1] in ["refscites", "citesrefs", "cr", "rc"]:
+            is_rc = False
+            for recid in seeds:
+                if recid in db.get_record(recid).citations:
+                    is_rc = True
+                    break
+            if not is_rc:
+                return False
+    else:
+        logger.error("Wrong syntax: {}. Must contain at most one '.'. "
+                     "".format(rule))
+        sys.exit(60)
+
+    return True
+
+
+# todo: docstrings
+def valid_connection(source_recid, target_recid, rules, seeds, db=None):
+    for rule in rules:
+        try:
+            source_rule, target_rule = rule.split('>')
+        except ValueError:
+            logger.error("Wrong syntax: {}. Ther should be exactly one '>' "
+                         "in this stringl".format(rule))
+            sys.exit(58)
+        if valid_node(source_recid, source_rule, seeds, db=db) and \
+            valid_node(target_recid, target_rule, seeds, db=db):
+            return True
+    return False

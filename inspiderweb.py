@@ -3,7 +3,7 @@
 import datetime
 from inspiderweb.log import logger, logcontrol
 from inspiderweb.database import Database
-from inspiderweb.dotgraph import DotGraph
+from inspiderweb.dotgraph import DotGraph, valid_connection
 import argparse
 from argparse import RawDescriptionHelpFormatter
 from inspiderweb.recidextractor import *
@@ -193,74 +193,6 @@ recids.update(get_recids_from_url_paths(args.urlpaths))
 db.autocomplete_records(args.get, force=args.forceupdate, recids=recids)
 
 
-def valid_node(recid, rule, seeds, db=None):
-    steps = rule.split('.')
-    if len(steps) == 1:
-        if steps[0] in ["all", "a"]:
-            if recid not in db._record:
-                return False
-        elif steps[0] in ["seeds", "s"]:
-            if recid not in seeds:
-                return False
-        else:
-            logger.error("Wrong keywords in  }".format(steps[0]))
-    elif len(steps) == 2:
-        if steps[0] in ["all", "a"]:
-            # if we use "all", we do not need the seeds anyway
-            seeds = db._records
-        elif steps[0] in ["seeds", "s"]:
-            pass
-        else:
-            logger.error("Wrong keywords in {}".format(steps[0]))
-            sys.exit(54)
-
-        if steps[1] in ["refs", "r"]:
-            is_ref = False
-            for recid in seeds:
-                if recid in db.get_record(recid).references:
-                    is_ref = True
-                    break
-            if not is_ref:
-                return False
-        if steps[1] in ["cites", "c"]:
-            is_cite = False
-            for recid in seeds:
-                if recid in db.get_record(recid).citations:
-                    is_cite = True
-                    break
-            if not is_cite:
-                return False
-        if steps[1] in ["refscites", "citesrefs", "cr", "rc"]:
-            is_rc = False
-            for recid in seeds:
-                if recid in db.get_record(recid).citations:
-                    is_rc = True
-                    break
-            if not is_rc:
-                return False
-    else:
-        logger.error("Wrong syntax: {}. Must contain at most one '.'. "
-                     "".format(rule))
-        sys.exit(60)
-
-    return True
-
-
-def valid_connection(source_recid, target_recid, rules, seeds, db=None):
-    for rule in rules:
-        try:
-            source_rule, target_rule = rule.split('>')
-        except ValueError:
-            logger.error("Wrong syntax: {}. Ther should be exactly one '>' "
-                         "in this stringl".format(rule))
-            sys.exit(58)
-        if valid_node(source_recid, source_rule, seeds, db=db) and \
-            valid_node(target_recid, target_rule, seeds, db=db):
-            return True
-    return False
-
-
-
 if args.plot:
 
     dg = DotGraph(db)
@@ -285,8 +217,8 @@ if args.plot:
     #      "//size=\"16.53,11.69\"; //a3\n"
     #      "//size=\"33.06,11.69\"\n"
 
-    # todo: Add otion to customize this
-    # want to support the following options
+    # fixme: use new code!
+    #  want to support the following options
     # Just don't require bibkey. Right now we're always getting it anyways
     # possibilities: list of <start> > <end> strings
     # with default to seeds>seeds (s>s) (note always use qutations)

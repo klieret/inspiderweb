@@ -366,6 +366,14 @@ Mostly works like this:
     
     db.save()    
 
+## Development notes
+
+There are the following branches
+
+* ```master```: Stable release
+* ```development```: Work on new features in progress. Might be completely broken from time to time
+* ```hotfixes```: Fixes that are then merged to both ```master``` and ```development```.
+* ```webcrawling_legacy```: Legacy code that still uses webcrawling.
 
 ## License
 
