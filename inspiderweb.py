@@ -121,7 +121,7 @@ action_options.add_argument("-g", "--get", required=False,
 misc_options.add_argument("-h", "--help",
                           help="Print this help message.", action="help")
 misc_options.add_argument("--rank", required=False,
-                          help="Rank by [year]", default="",
+                           help="Rank by [year]", default="",
                           type=str,
                           choices=["year"])
 # fixme: reimplement
@@ -151,6 +151,8 @@ if args.plot and not args.output:
 # todo: add clusters
 # todo: extract more infomration; add title as tooltip
 
+# fixme: Restore .travis to specific tests again.
+
 db = Database(args.database[0])
 db.load()
 
@@ -168,6 +170,93 @@ recids.update(get_recids_from_recid_paths(args.recidpaths))
 recids.update(get_recids_from_url_paths(args.urlpaths))
 
 db.autocomplete_records(args.get, force=args.forceupdate, recids=recids)
+
+def valid_node(recid, rule, seeds, db=None):
+    steps = rule.split('.')
+    if len(steps) == 1:
+        if steps[0] in ["all", "a"]:
+            if recid not in db._record:
+                return False
+        elif steps[0] in ["seeds", "s"]:
+            if recid not in seeds:
+                return False
+        else:
+            logger.error("Wrong keywords in  }".format(steps[0]))
+    elif len(steps) == 2:
+        if steps[0] in ["all", "a"]:
+            if steps[1] in ["refs", "r"]:
+                is_ref = False
+                for recid in db._records:
+                    if recid in db.get_record(recid).references:
+                        is_ref = True
+                        break
+                if not is_ref:
+                    return False
+            if steps[1] in ["cites", "c"]:
+                is_cite = False
+                for recid in db._records:
+                    if recid in db.get_record(recid).citations:
+                        is_cite = True
+                        break
+                if not is_cite:
+                    return False
+            if steps[1] in ["refscites", "citesrefs", "cr", "rc"]:
+                is_rc = False
+                for recid in db._records:
+                    if recid in db.get_record(recid).citations:
+                        is_rc = True
+                        break
+                if not is_rc:
+                    return False
+        # fixme: this can also cover the case above if we just set
+        # seeds = all once we detect the all keyword.
+        elif steps[0] in ["seeds", "s"]:
+            if steps[1] in ["refs", "r"]:
+                is_ref = False
+                for recid in seeds:
+                    if recid in db.get_record(recid).references:
+                        is_ref = True
+                        break
+                if not is_ref:
+                    return False
+            if steps[1] in ["cites", "c"]:
+                is_cite = False
+                for recid in seeds:
+                    if recid in db.get_record(recid).citations:
+                        is_cite = True
+                        break
+                if not is_cite:
+                    return False
+            if steps[1] in ["refscites", "citesrefs", "cr", "rc"]:
+                is_rc = False
+                for recid in seeds:
+                    if recid in db.get_record(recid).citations:
+                        is_rc = True
+                        break
+                if not is_rc:
+                    return False
+        else:
+            logger.error("Wrong keywords in {}".format(steps[0]))
+    else:
+        logger.error("Wrong syntax: {}. Must contain at most one '.'. "
+                     "".format(rule))
+        sys.exit(60)
+
+    return True
+
+def valid_connection(source_recid, target_recid, rule, seeds, db=None):
+    valid = True
+    try:
+        start_rule, end_rule = rule.split('>')
+    except ValueError:
+        logger.error("Wrong syntax: {}. Ther should be exactly one '>' "
+                     "in this stringl".format(rule))
+        sys.exit(58)
+
+
+    end_rule_steps = end_rule.split('.')
+
+
 
 if args.plot:
 
@@ -194,6 +283,14 @@ if args.plot:
     #      "//size=\"33.06,11.69\"\n"
 
     # todo: Add otion to customize this
+    # want to support the following options
+    # Just don't require bibkey. Right now we're always getting it anyways
+    # possibilities: list of <start> > <end> strings
+    # with default to seeds>seeds (s>s) (note always use qutations)
+    # other options: .refs, .cites, .refcites, .citerefs
+    # add extra option to plot lonely seeds or db items.
+
+
     def valid_connection(source, target):
         sr = db.get_record(source)
         tr = db.get_record(target)

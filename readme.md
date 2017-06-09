@@ -1,5 +1,5 @@
 # InspiderWeb [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=master)](https://travis-ci.org/klieret/inspiderweb)
-[Features](#features) | [Screenshots](#screenshots) | [How does it work?](#how-does-it-work) | [Limitations/Bugs](#limitationsbugs) | [Installation](#installation) | [Usage](#usage) | [Tutorial](#tutorial) | [License](#license)
+[Features](#features) | [Screenshots](#screenshots) | [How does it work?](#how-does-it-work) | [Limitations/Bugs](#limitationsbugs) | [Installation](#installation) | [Usage](#usage) | [Tutorial](#tutorial) | [Usage Examples](#examples-usage) | [License](#license)
 
 InspiderWeb is a tool to analyze networks papers referencing and citing each other. It gets its information from the [inspirehep](http://inspirehep.net/) API, then uses the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) to describe the network. The result can then be plotted by the [Graphviz Package](http://www.graphviz.org/) and similar programs.
 
@@ -303,9 +303,23 @@ To get the graph sorted by years, simply supply the ```--rank year``` option. Do
 
 ![tutorial year picture](https://github.com/klieret/readme-files/blob/master/inspiderweb/tutorial_year.png)
 
-## Examples
+## Usage Examples
 
-## Scripting
+See the tutorial for how to plot the dotfile. 
+
+* Get all references for one paper and plot their relations: Look up the paper on inspirehep and get the recid from the url, then run
+    
+        python3 inspiderweb.py -d db/<db name>.pickle -q "refersto:recid:<RECID>" -g seeds.refs -p -o build/<output name>.dot 
+  
+* I have a couple of documents in a folder that contain inspirehep bibkeys. I want to plot all the connections between these papers. 
+
+        python3 inspiderweb.py -d db/<db name>.pickle -b <path to folder> -g seeds.refscites -p -o build/<output name>.dot
+
+  If you instead only have a couple of documents, simply do ```-p <path1> <path2> ...```.
+  
+* I want to get the relations between all of the papers I authored:
+
+        python3 inspiderweb.py -d db/<db name>.pickle -q "a <authorname>" -g seeds.refs -p -o build/<output name>.dot     
 
 Mostly works like this:
 
