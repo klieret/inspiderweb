@@ -42,7 +42,8 @@ setup_options = parser.add_argument_group('Setup/Configure Options',
                                           'perform some action.')
 action_options = parser.add_argument_group('Action Options',
                                            'What do you want to do?')
-misc_options = parser.add_argument_group('Misc', 'Misc Options')
+misc_options = parser.add_argument_group('Additional Options',
+                                         'Further Configuration...')
 
 setup_options.add_argument("-d", "--database", required=True,
                            help="Pickle database (db) file. Multiple db files "
@@ -71,7 +72,7 @@ setup_options.add_argument("-q", "--queries", required=False,
                            type=str, nargs="+", default=[])
 setup_options.add_argument("-b", "--bibkeypaths", required=False,
                            help="Path of a file or a directory. Multiple paths"
-                                "are supported. If the path "
+                                " are supported. If the path "
                                 "points to a file, the file is searched for "
                                 "bibkeys, which are then used as seeds. If the"
                                 "path points to a directory, we recursively"
@@ -101,10 +102,23 @@ setup_options.add_argument("-u", "--urlpaths", required=False,
 # similar with all....
 # as for implementation: method takes
 
+plot_help = "Generate dot output (i.e. plot). If you do not specify an " \
+            "option, only connections between seeds are plotted (this is the" \
+            "same as specifying 'seeds>seeds' or 's>s'. If you want to " \
+            "customize this, you can supply several rules of the following " \
+            "form: 'source selection'>'target selection'. The selections" \
+            "for source targets are of the form {seeds,all}[.{refs, cites," \
+            "refscites}]. Where e.g. seeds.refscites means that all records" \
+            "being cited by a seed or citing a seed are valid starting points"\
+            "of an arrow. Short options: s (seeds), a (all), r (refs), c " \
+            "(cites). For 'refscites', the following alias exist: " \
+            "'citesrefs', 'cr', 'rc'. "
+
 action_options.add_argument("-p", "--plot", required=False,
-                            action="store_true",
-                            help="Generate dot output (i.e. plot).",
-                            default=False)
+                            help=plot_help,
+                            type=str,
+                            default="seeds>seeds",
+                            nargs="*")
 
 update_help = "Download information. Multiple arguments are supported. " \
               "Each argument must look like this: Starts with 'seeds' or " \
@@ -178,6 +192,7 @@ recids.update(get_recids_from_url_paths(args.urlpaths))
 
 db.autocomplete_records(args.get, force=args.forceupdate, recids=recids)
 
+
 def valid_node(recid, rule, seeds, db=None):
     steps = rule.split('.')
     if len(steps) == 1:
@@ -191,59 +206,38 @@ def valid_node(recid, rule, seeds, db=None):
             logger.error("Wrong keywords in  }".format(steps[0]))
     elif len(steps) == 2:
         if steps[0] in ["all", "a"]:
-            if steps[1] in ["refs", "r"]:
-                is_ref = False
-                for recid in db._records:
-                    if recid in db.get_record(recid).references:
-                        is_ref = True
-                        break
-                if not is_ref:
-                    return False
-            if steps[1] in ["cites", "c"]:
-                is_cite = False
-                for recid in db._records:
-                    if recid in db.get_record(recid).citations:
-                        is_cite = True
-                        break
-                if not is_cite:
-                    return False
-            if steps[1] in ["refscites", "citesrefs", "cr", "rc"]:
-                is_rc = False
-                for recid in db._records:
-                    if recid in db.get_record(recid).citations:
-                        is_rc = True
-                        break
-                if not is_rc:
-                    return False
-        # fixme: this can also cover the case above if we just set
-        # seeds = all once we detect the all keyword.
+            # if we use "all", we do not need the seeds anyway
+            seeds = db._records
         elif steps[0] in ["seeds", "s"]:
-            if steps[1] in ["refs", "r"]:
-                is_ref = False
-                for recid in seeds:
-                    if recid in db.get_record(recid).references:
-                        is_ref = True
-                        break
-                if not is_ref:
-                    return False
-            if steps[1] in ["cites", "c"]:
-                is_cite = False
-                for recid in seeds:
-                    if recid in db.get_record(recid).citations:
-                        is_cite = True
-                        break
-                if not is_cite:
-                    return False
-            if steps[1] in ["refscites", "citesrefs", "cr", "rc"]:
-                is_rc = False
-                for recid in seeds:
-                    if recid in db.get_record(recid).citations:
-                        is_rc = True
-                        break
-                if not is_rc:
-                    return False
+            pass
         else:
             logger.error("Wrong keywords in {}".format(steps[0]))
+            sys.exit(54)
+
+        if steps[1] in ["refs", "r"]:
+            is_ref = False
+            for recid in seeds:
+                if recid in db.get_record(recid).references:
+                    is_ref = True
+                    break
+            if not is_ref:
+                return False
+        if steps[1] in ["cites", "c"]:
+            is_cite = False
+            for recid in seeds:
+                if recid in db.get_record(recid).citations:
+                    is_cite = True
+                    break
+            if not is_cite:
+                return False
+        if steps[1] in ["refscites", "citesrefs", "cr", "rc"]:
+            is_rc = False
+            for recid in seeds:
+                if recid in db.get_record(recid).citations:
+                    is_rc = True
+                    break
+            if not is_rc:
+                return False
     else:
         logger.error("Wrong syntax: {}. Must contain at most one '.'. "
                      "".format(rule))
@@ -251,17 +245,20 @@ def valid_node(recid, rule, seeds, db=None):
 
     return True
 
-def valid_connection(source_recid, target_recid, rule, seeds, db=None):
-    valid = True
-    try:
-        start_rule, end_rule = rule.split('>')
-    except ValueError:
-        logger.error("Wrong syntax: {}. Ther should be exactly one '>' "
-                     "in this stringl".format(rule))
-        sys.exit(58)
 
+def valid_connection(source_recid, target_recid, rules, seeds, db=None):
+    for rule in rules:
+        try:
+            source_rule, target_rule = rule.split('>')
+        except ValueError:
+            logger.error("Wrong syntax: {}. Ther should be exactly one '>' "
+                         "in this stringl".format(rule))
+            sys.exit(58)
+        if valid_node(source_recid, source_rule, seeds, db=db) and \
+            valid_node(target_recid, target_rule, seeds, db=db):
+            return True
+    return False
 
-    end_rule_steps = end_rule.split('.')
 
 
 if args.plot:

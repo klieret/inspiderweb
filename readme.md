@@ -81,12 +81,13 @@ The ```graphviz``` package provides several nice tools that can be used.
 All command line options of inspiderweb are described in the help message: Run ```python3 inspiderweb.py --help``` to get:
 ```
 usage: python3 inspiderweb.py -d DATABASE [DATABASE ...] [-o OUTPUT]
-                              [-r RECIDFILESS [RECIDFILESS ...]]
+                              [-r RECIDPATHS [RECIDPATHS ...]]
                               [-q QUERIES [QUERIES ...]]
-                              [-b BIBKEYFILES [BIBKEYFILES ...]]
-                              [-u URLSFILES [URLSFILES ...]] [-p]
-                              [-g GET [GET ...]] [-h] [--rank {year}]
-                              [--maxseeds MAXSEEDS] [--forceupdate]
+                              [-b BIBKEYPATHS [BIBKEYPATHS ...]]
+                              [-u URLPATHS [URLPATHS ...]]
+                              [-p [PLOT [PLOT ...]]] [-g GET [GET ...]] [-h]
+                              [--rank {year}] [--maxseeds MAXSEEDS]
+                              [--forceupdate]
                               [-v--verbosity {debug,info,warning,error,critical}]
 
     INSPIDERWEB
@@ -109,20 +110,25 @@ Setup/Configure Options:
                         save the resulting merged db
   -o OUTPUT, --output OUTPUT
                         Output dot file.
-  -r RECIDFILESS [RECIDFILESS ...], --recidfiless RECIDFILESS [RECIDFILESS ...]
-                        Input file with recids as seeds. Multiple files are
-                        supported.
+  -r RECIDPATHS [RECIDPATHS ...], --recidpaths RECIDPATHS [RECIDPATHS ...]
+                        Path of a file or a directory. Multiple pathsare
+                        supported. If the path points to a file, each line of
+                        the file is interpreted as a recid. The collected
+                        recidsare then used as seeds. If thepath points to a
+                        directory, we recursivelygo into it (excluding hidden
+                        files) and extract recids from every file.
   -q QUERIES [QUERIES ...], --queries QUERIES [QUERIES ...]
                         Take the results of inspirehep search query (search
                         string you would enter in the inspirehep online search
                         form) as seeds. Multiple search strings supported.
-  -b BIBKEYFILES [BIBKEYFILES ...], --bibkeyfiles BIBKEYFILES [BIBKEYFILES ...]
-                        Path of a file or a directory. If the path points to a
-                        file, the file is searched for bibkeys, which are then
-                        used as seeds. If thepath points to a directory, we
-                        recursivelygo into it (excluding hidden files) and
-                        search every file for bibkeys.
-  -u URLSFILES [URLSFILES ...], --urlsfiles URLSFILES [URLSFILES ...]
+  -b BIBKEYPATHS [BIBKEYPATHS ...], --bibkeypaths BIBKEYPATHS [BIBKEYPATHS ...]
+                        Path of a file or a directory. Multiple paths are
+                        supported. If the path points to a file, the file is
+                        searched for bibkeys, which are then used as seeds. If
+                        thepath points to a directory, we recursivelygo into
+                        it (excluding hidden files) and search every file for
+                        bibkeys.
+  -u URLPATHS [URLPATHS ...], --urlpaths URLPATHS [URLPATHS ...]
                         Path of a file or a directory. If the path points to a
                         file, the file is searched for inspirehep urls, from
                         which the recids are extracted and used as seeds. If
@@ -133,7 +139,20 @@ Setup/Configure Options:
 Action Options:
   What do you want to do?
 
-  -p, --plot            Generate dot output (i.e. plot).
+  -p [PLOT [PLOT ...]], --plot [PLOT [PLOT ...]]
+                        Generate dot output (i.e. plot). If you do not specify
+                        an option, only connections between seeds are plotted
+                        (this is thesame as specifying 'seeds>seeds' or 's>s'.
+                        If you want to customize this, you can supply several
+                        rules of the following form: 'source
+                        selection'>'target selection'. The selectionsfor
+                        source targets are of the form {seeds,all}[.{refs,
+                        cites,refscites}]. Where e.g. seeds.refscites means
+                        that all recordsbeing cited by a seed or citing a seed
+                        are valid starting pointsof an arrow. Short options: s
+                        (seeds), a (all), r (refs), c (cites). For
+                        'refscites', the following alias exist: 'citesrefs',
+                        'cr', 'rc'.
   -g GET [GET ...], --get GET [GET ...]
                         Download information. Multiple arguments are
                         supported. Each argument must look like this: Starts
