@@ -7,6 +7,7 @@ from inspiderweb.dotgraph import DotGraph, valid_connection
 import argparse
 from argparse import RawDescriptionHelpFormatter
 from inspiderweb.recidextractor import *
+import configparser
 
 """ Main file of inspiderweb: Tool to analyze paper reference networks.
 Currently hosted at: https://github.com/klieret/inspiderweb
@@ -146,6 +147,11 @@ misc_options.add_argument("--rank", required=False,
                           type=str,
                           choices=["year"])
 # fixme: reimplement
+misc_options.add_argument("-c", "--config", required=False, type=str,
+                          help="Add config file to specify more "
+                               "settings such as the style of the nodes."
+                               "Default value is 'config/default.py'. ",
+                          default="config/default.py")
 misc_options.add_argument("--maxseeds", required=False, type=int,
                           help="Maximum number of seeds (for testing "
                                "purposes).",
@@ -195,22 +201,15 @@ db.autocomplete_records(args.get, force=args.forceupdate, recids=recids)
 
 if args.plot:
 
-    dg = DotGraph(db)
+    config = configparser.ConfigParser()
+    config.read(args.config)
+
+    dg = DotGraph(db, config["dotgraph"])
 
     # ALWAYS END EVERYTHING WITH A SEMICOLON
     # EXCEPT THINGS IN SQUARE BRACKETS: USE COMMA
     # todo: move that to config or something
-    graph_style = \
-        "graph [label=\"inspiderweb {date} {time}\", fontsize=60];".format(
-            date=str(datetime.date.today()),
-            time=str(datetime.datetime.now().time()))
-    node_style = "node[fontsize=25, fontcolor=black, fontname=Arial, " \
-                 "style=filled, color=red, fontcolor=white, shape=note];"
-    # size = 'ratio="0.3";'#''size="14,10";'
-    # size = 'overlap=prism; overlap_scaling=0.01; ratio=0.7'
-    size = ";"
-    style = '\n'.join([graph_style, node_style, size])
-    dg._style = style
+
     # "//ratio=\"1:1\";\n"
     #      "//ratio=\"fill\";\n"
     #      "//size=\"11.692,8.267\"; \n"

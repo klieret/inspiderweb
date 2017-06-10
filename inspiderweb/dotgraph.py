@@ -17,14 +17,14 @@ class DotGraph(object):
     in dot language that describes the graph which is formed by the
     papers/records referencing each other.
     """
-    def __init__(self, db):
+    def __init__(self, db, config):
         self.db = db
+        self.config = config
         self._dot_str = ""
         self._all_node_ids = set([])
         self._node_styles = {}
         self._clusters = {}  # clusterlabel: (set of recids, style)
         self._connections = set([])
-        self._style = ""
 
     def add_node(self, recid, style=""):
         self._node_styles[recid] = style
@@ -59,9 +59,7 @@ class DotGraph(object):
         """ Begin graph in dot string. """
         self._dot_str = ""
         self._dot_str += "digraph g {\n"
-        indented = ";\n".join(['\t' + line for line in self._style.split(';')
-                               if line])
-        self._dot_str += indented
+        self._dot_str += self.config["graph_style"] + "\n"
 
     def _draw_ranks(self, rank: str) -> None:
         """ If nodes are added to a `rank=same` part, they will all appear
@@ -86,8 +84,7 @@ class DotGraph(object):
                 node_ids_by_year[year].add(node_id)
 
             # fixme: style shouldn't be defined here
-            self._dot_str += "\t{\n\t\tnode [shape=circle, fontsize=20, " \
-                             "style=filled, color=yellow, fontcolor=black];\n"
+            self._dot_str += self.config["year_node_style"]  + "\n"
             self._dot_str += "\t\t" + "->".join(
                 list(sorted(node_ids_by_year.keys(), reverse=True))) + ";\n"
             self._dot_str += "\t}\n"
@@ -108,14 +105,8 @@ class DotGraph(object):
                 self._dot_str += '\t\tsubgraph "cluster_{}" {{\n'.format(
                     cluster_id)
                 self._dot_str += ";\n".join(cluster[1].split(';'))
-                # self._dot_str += ("\tfontname=Courier;\n"
-                #                  "\tfontcolor=red;\n"
-                #                  "\tpenwidth=3;\n"
-                #                  "\tfontsize=50;\n"
-                #                  "\tcolor=\"red\";\n"
-                #                  "\tstyle=\"filled\";\n"
-                #                  "\tfillcolor=\"gray97\";\n")
-                # self._dot_str += '\tlabel="{}";\n'.format(cluster)
+                self._dot_str += self.config["cluster_style"]
+                self._dot_str += 'label="{}";\n'.format(cluster)
                 for recid in cluster[0]:
                     self._dot_str += '\t\t"{};\n'.format(recid)
                 self._dot_str += "\t}\n"
