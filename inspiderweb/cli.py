@@ -106,8 +106,8 @@ plot_help = "Generate dot output (i.e. plot). If you do not specify an " \
 action_options.add_argument("-p", "--plot", required=False,
                             help=plot_help,
                             type=str,
-                            default="seeds>seeds",
-                            nargs="*")
+                            const="seeds>seeds",
+                            nargs="?")
 
 update_help = "Download information. Multiple arguments are supported. " \
               "Each argument must look like this: Starts with 'seeds' or " \
