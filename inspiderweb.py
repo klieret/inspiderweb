@@ -3,7 +3,9 @@
 from inspiderweb.log import logcontrol
 from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
-from inspiderweb.recidextractor import *
+from inspiderweb.recidextractor import get_recid_from_queries, \
+    get_recids_from_bibkey_paths, get_recids_from_url_paths, \
+    get_recids_from_recid_paths
 from inspiderweb.cli import cli_parser, get_plot_connections
 import configparser
 
