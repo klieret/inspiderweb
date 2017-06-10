@@ -84,9 +84,9 @@ usage: python3 inspiderweb.py -d DATABASE [DATABASE ...] [-o OUTPUT]
                               [-r RECIDPATHS [RECIDPATHS ...]]
                               [-q QUERIES [QUERIES ...]]
                               [-b BIBKEYPATHS [BIBKEYPATHS ...]]
-                              [-u URLPATHS [URLPATHS ...]]
-                              [-p [PLOT [PLOT ...]]] [-g GET [GET ...]] [-h]
-                              [--rank {year}] [--maxseeds MAXSEEDS]
+                              [-u URLPATHS [URLPATHS ...]] [-p [PLOT]]
+                              [-g GET [GET ...]] [-h] [--rank {year}]
+                              [-c CONFIG] [--maxseeds MAXSEEDS]
                               [--forceupdate]
                               [-v--verbosity {debug,info,warning,error,critical}]
 
@@ -102,7 +102,8 @@ usage: python3 inspiderweb.py -d DATABASE [DATABASE ...] [-o OUTPUT]
      /       \
 
 Setup/Configure Options:
-  Supply in/output paths. Note that in most cases, seeds are only added to the database if we perform some action.
+  Supply in/output paths. Note that in most cases, seeds are only added to the 
+  database if we perform some action.
 
   -d DATABASE [DATABASE ...], --database DATABASE [DATABASE ...]
                         Pickle database (db) file. Multiple db files are
@@ -139,13 +140,13 @@ Setup/Configure Options:
 Action Options:
   What do you want to do?
 
-  -p [PLOT [PLOT ...]], --plot [PLOT [PLOT ...]]
+  -p [PLOT], --plot [PLOT]
                         Generate dot output (i.e. plot). If you do not specify
                         an option, only connections between seeds are plotted
-                        (this is thesame as specifying 'seeds>seeds' or 's>s'.
+                        (this is thesame as specifying 'seeds-seeds' or 's-s'.
                         If you want to customize this, you can supply several
                         rules of the following form: 'source
-                        selection'>'target selection'. The selectionsfor
+                        selection'-'target selection'. The selectionsfor
                         source targets are of the form {seeds,all}[.{refs,
                         cites,refscites}]. Where e.g. seeds.refscites means
                         that all recordsbeing cited by a seed or citing a seed
@@ -169,11 +170,15 @@ Action Options:
                         reference 2. For all of the above, get all citations.
                         Similarly one could have written 's.r.c'.
 
-Misc:
-  Misc Options
+Additional Options:
+  Further Configuration...
 
   -h, --help            Print this help message.
   --rank {year}         Rank by [year]
+  -c CONFIG, --config CONFIG
+                        Add config file to specify more settings such as the
+                        style of the nodes.Default value is
+                        'config/default.py'.
   --maxseeds MAXSEEDS   Maximum number of seeds (for testing purposes).
   --forceupdate         For all information that we get from the database:
                         Force redownload
@@ -339,32 +344,6 @@ See the tutorial for how to plot the dotfile.
 * I want to get the relations between all of the papers I authored:
 
         python3 inspiderweb.py -d db/<db name>.pickle -q "a <authorname>" -g seeds.refs -p -o build/<output name>.dot     
-
-Mostly works like this:
-
-    db = Database(args.database[0])
-    db.load()
-    recids = ....
-    db.autocomplete_records(..., ...)
-    dg = DotGraph(db)
-    
-    def should_plot_connection(source, target):
-        .... 
-    
-    for recid, record in db._records.items():
-            for referece_recid in record.references:
-                if not should_plot_connection(record.recid, referece_recid):
-                    continue
-                dg.add_connection(record.recid, referece_recid)
-            for citation_recid in record.citations:
-                if not should_plot_connection(record.recid, citation_recid):
-                    continue
-                dg.add_connection(citation_recid, record.recid)
-    
-    dg.generate_dot_str(rank=args.rank)
-    dg.write_to_file(args.output)
-    
-    db.save()    
 
 ## Development notes
 
