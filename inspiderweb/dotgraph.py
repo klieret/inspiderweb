@@ -94,7 +94,8 @@ class DotGraph(object):
                     continue
                 node_ids_by_year[year].add(node_id)
 
-            # fixme: style shouldn't be defined here
+            # todo: fix indentation of stuff from config file
+            self._dot_str += "{"
             self._dot_str += self.config["year_node_style"]  + "\n"
             self._dot_str += "\t\t" + "->".join(
                 list(sorted(node_ids_by_year.keys(), reverse=True))) + ";\n"
