@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-import datetime
-from inspiderweb.log import logger, logcontrol
+from inspiderweb.log import logcontrol
 from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
 from inspiderweb.recidextractor import *
@@ -31,16 +30,11 @@ if args.plot and not args.output:
 # fixme: Restore .travis to specific tests again.
 
 db = Database(args.database[0])
-db.load()
-
-for path in args.database[1:]:
-    db.load(path)
-
+db.load(args.database)
 db.statistics()
 
+# get recids
 recids = set()
-
-
 recids.update(get_recid_from_queries(args.queries, db=db))
 recids.update(get_recids_from_bibkey_paths(args.bibkeypaths, db=db))
 recids.update(get_recids_from_recid_paths(args.recidpaths))
