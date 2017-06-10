@@ -348,16 +348,16 @@ Mostly works like this:
     db.autocomplete_records(..., ...)
     dg = DotGraph(db)
     
-    def valid_connection(source, target):
+    def should_plot_connection(source, target):
         .... 
     
     for recid, record in db._records.items():
             for referece_recid in record.references:
-                if not valid_connection(record.recid, referece_recid):
+                if not should_plot_connection(record.recid, referece_recid):
                     continue
                 dg.add_connection(record.recid, referece_recid)
             for citation_recid in record.citations:
-                if not valid_connection(record.recid, citation_recid):
+                if not should_plot_connection(record.recid, citation_recid):
                     continue
                 dg.add_connection(citation_recid, record.recid)
     

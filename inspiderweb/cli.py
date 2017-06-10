@@ -1,5 +1,8 @@
 import argparse
 from argparse import RawDescriptionHelpFormatter
+from .log import logger
+from typing import Iterable
+import sys
 
 description = r"""
     INSPIDERWEB
@@ -16,19 +19,19 @@ description = r"""
 
 
 # Use the RawTextHelpFormatter in order to allow linebreaks in the description
-parser = argparse.ArgumentParser(description=description,
-                                 prog="python3 inspiderweb.py",
-                                 formatter_class=RawDescriptionHelpFormatter,
-                                 add_help=False)
+cli_parser = argparse.ArgumentParser(description=description,
+                                     prog="python3 inspiderweb.py",
+                                     formatter_class=RawDescriptionHelpFormatter,
+                                     add_help=False)
 
-setup_options = parser.add_argument_group('Setup/Configure Options',
+setup_options = cli_parser.add_argument_group('Setup/Configure Options',
                                           'Supply in/output paths. Note that '
                                           'in most cases, seeds are only '
                                           'added to the database if we '
                                           'perform some action.')
-action_options = parser.add_argument_group('Action Options',
+action_options = cli_parser.add_argument_group('Action Options',
                                            'What do you want to do?')
-misc_options = parser.add_argument_group('Additional Options',
+misc_options = cli_parser.add_argument_group('Additional Options',
                                          'Further Configuration...')
 
 setup_options.add_argument("-d", "--database", required=True,
@@ -150,4 +153,112 @@ misc_options.add_argument("-v" "--verbosity", required=False, type=str,
                                    "critical"],
                           default="debug", dest="verbosity")
 
-args = parser.parse_args()
+
+def should_plot_node(recid: str, rule: str, seeds: Iterable[str], db) -> bool:
+    """ Based on the rule $rule and the seeds $seeds that were given as
+    parameters, return True if the recid $recid is of interest for us.
+    E.g. if the rule is "all.refs", return true if the recid is referenced
+    by any paper in the database. See the documentation of the command
+    line arguments for more on this syntax. """
+    steps = rule.split('.')
+    if len(steps) == 1:
+        if steps[0] in ["all", "a"]:
+            if recid not in db._records:
+                return False
+        elif steps[0] in ["seeds", "s"]:
+            if recid not in seeds:
+                return False
+        else:
+            logger.error("Wrong keywords in  }".format(steps[0]))
+    elif len(steps) == 2:
+        if steps[0] in ["all", "a"]:
+            # if we use "all", we do not need the seeds anyway
+            seeds = db._records
+        elif steps[0] in ["seeds", "s"]:
+            pass
+        else:
+            logger.error("Wrong keywords in {}".format(steps[0]))
+            sys.exit(54)
+
+        if steps[1] in ["refs", "r"]:
+            is_ref = False
+            for recid in seeds:
+                if recid in db.get_record(recid).references:
+                    is_ref = True
+                    break
+            if not is_ref:
+                return False
+        if steps[1] in ["cites", "c"]:
+            is_cite = False
+            for recid in seeds:
+                if recid in db.get_record(recid).citations:
+                    is_cite = True
+                    break
+            if not is_cite:
+                return False
+        if steps[1] in ["refscites", "citesrefs", "cr", "rc"]:
+            is_rc = False
+            for recid in seeds:
+                if recid in db.get_record(recid).citations:
+                    is_rc = True
+                    break
+            if not is_rc:
+                return False
+    else:
+        logger.error("Wrong syntax: {}. Must contain at most one '.'. "
+                     "".format(rule))
+        sys.exit(60)
+
+    return True
+
+
+def should_plot_connection(source_recid: str, target_recid: str,
+                           rules: Iterable[str],
+                           seeds: Iterable[str], db) -> bool:
+    """ Based on the rules $rules and the seeds $seeds that were given as
+    parameters, return True if the connection $source_recid >  $target_recid
+    should be plotted.
+    E.g. for the rules ["seeds.refs > seeds", "seeds>all"], return True for all
+    connections of references of seeds to the seeds and any connection of the
+    seeds to anything.
+    See the command line arguments for more information. """
+    for rule in rules:
+        try:
+            source_rule, target_rule = rule.split('>')
+        except ValueError:
+            logger.error("Wrong syntax: {}. Ther should be exactly one "
+                         "'>' in this stringl".format(rule))
+            sys.exit(58)
+        if db.should_plot_node(source_recid, source_rule, seeds) and \
+                db.should_plot_node(target_recid, target_rule, seeds):
+            return True
+    return False
+
+
+def get_plot_connections(rules: Iterable[str], seeds: Iterable[str],
+                         db) -> set:
+    """ Returns list of connections that the user wants to have plotted
+    (based on the rules in $rules) as a set of two-tuples of the connected
+    recids.
+    
+    Args:
+        rules: Iterable of rules (strings, following the guidlines in the 
+               command line help)
+        seeds: Iterable of recids
+        db: Database
+    Returns: set of two-tuples (from_recid, to_recid) for all connections
+             that we are interested in.
+    """
+    connections = set()
+    for recid, record in db._records.items():
+        for reference_recid in record.references:
+            if not should_plot_connection(recid, reference_recid, rules,
+                                          seeds, db):
+                continue
+            connections.add((record.recid, reference_recid))
+        for citation_recid in record.citations:
+            if not should_plot_connection(citation_recid, recid, rules,
+                                          seeds, db):
+                continue
+            connections.add((citation_recid, record.recid))
+    return connections

@@ -5,7 +5,7 @@ import os.path
 import re
 import time
 from .log import logger
-from typing import List, Set
+from typing import List, Set, Iterable
 import socket
 import urllib.request
 import urllib.parse
