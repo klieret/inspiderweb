@@ -1,0 +1,138 @@
+# for file in *.pdf; do echo $file | cut -c 1-4; done
+# background.bsm
+3no5; 
+# background.ew.fermi
+xveo; 
+9dwf;
+hjp8;
+jn6i;
+# background.ew.neutrino
+m6kr; http://inspirehep.net/record/1321484
+# background.ew.primary
+kmgi; http://inspirehep.net/record/726283
+m1ga; http://inspirehep.net/record/675943
+u05j;
+upwb; http://inspirehep.net/record/1489868
+xzvr;
+# background.ew.secondary
+2jm8; http://inspirehep.net/record/446700
+bmo3;
+dlr2;
+g9pj;
+l97o; http://inspirehep.net/record/832122
+nqln;
+sb26;
+sh4u;
+tw8q;
+# background.flavor
+pic0;
+# background.sym
+2dcd; http://inspirehep.net/record/817629
+tb69;
+wocq;
+# background.helicities
+ec0d; http://inspirehep.net/record/1261436
+# models.2hdm.a2hdm
+42rz; http://inspirehep.net/record/828290
+ns8n; http://inspirehep.net/record/857318
+# models.2hdm.bgl
+wgeq; http://inspirehep.net/record/415669
+# models.2hdm.from
+izr2; http://inspirehep.net/record/709378
+# models.2hdm.mfv
+7dmu; http://inspirehep.net/record/589708
+iqpg; http://inspirehep.net/record/868875
+# models.2hdm.overview
+efmy; http://inspirehep.net/record/902365
+# models.2hdm.constraints
+h31q; http://inspirehep.net/record/1518156
+i13x; http://inspirehep.net/record/825412
+# models.2hdm.symmetries
+28hp; http://inspirehep.net/record/687129
+dgs8; http://inspirehep.net/record/679963
+hxhf; http://inspirehep.net/record/655601	
+y4wd; http://inspirehep.net/record/711388
+# models.2hdm.type3
+3pen; http://inspirehep.net/record/1391519
+kfgh; http://inspirehep.net/record/604808
+krt6; http://inspirehep.net/record/1513141
+2mto; http://inspirehep.net/record/1516196
+n5oj; 
+vp8r; 
+# models.2hdm
+tif9; http://inspirehep.net/record/657955
+42rz; http://inspirehep.net/record/828290
+z203; http://inspirehep.net/record/814281
+# models.lq
+37w4; http://inspirehep.net/record/1252083
+lrs1; http://inspirehep.net/record/1403180
+ooi7; http://inspirehep.net/record/1333870
+ryrh; http://inspirehep.net/record/1206631
+n0pk; http://inspirehep.net/record/1093648
+t3b2; http://inspirehep.net/record/696766
+jcl0;
+vulk;
+# scont
+v073; http://inspirehep.net/record/1505599
+3kdb; http://inspirehep.net/record/372386
+lg8o; http://inspirehep.net/record/1118049
+plsq; http://inspirehep.net/record/1197324
+rpue; http://inspirehep.net/record/1225272
+sgwq; http://inspirehep.net/record/1400814
+wvec; http://inspirehep.net/record/333647
+# MISC
+sb50; http://inspirehep.net/record/678628
+psl0; http://inspirehep.net/record/282092
+d9k8; http://inspirehep.net/record/835236
+grjm; http://inspirehep.net/record/1489868
+bm9a; http://inspirehep.net/record/1117851
+bdg4; http://inspirehep.net/record/616445
+ql7r; http://inspirehep.net/record/900493
+yyge; http://inspirehep.net/record/723848
+z8yj; http://inspirehep.net/record/279039
+acrt; http://inspirehep.net/record/1382593
+n40i; http://inspirehep.net/record/856053
+iwmd; http://inspirehep.net/record/1452723
+ooi7; http://inspirehep.net/record/1333870
+pdig; http://inspirehep.net/record/1594734
+yy5t; http://inspirehep.net/record/358218
+g3i0; http://inspirehep.net/record/358218
+u6j6; http://inspirehep.net/record/781982
+5wd2; http://inspirehep.net/record/1489868
+mkm6; http://inspirehep.net/record/1301222  
+jttr; http://inspirehep.net/record/1229516
+iaeb; http://inspirehep.net/record/1208120
+0ht5; http://inspirehep.net/record/235471
+vkyn; http://inspirehep.net/record/1489868
+frf8; http://inspirehep.net/record/1503177
+vpm5; http://inspirehep.net/record/1377366
+# Wprime
+p1t1; http://inspirehep.net/record/1125962
+r5wb; http://inspirehep.net/record/1322383
+77ig; http://inspirehep.net/record/1111995
+z8ib; http://inspirehep.net/record/279185
+sysd; http://inspirehep.net/record/591241
+t6h4; http://inspirehep.net/record/892770
+z8ij; http://inspirehep.net/record/1204603
+lxg1; http://inspirehep.net/record/855936
+n86k; http://inspirehep.net/record/677093
+z2c5; http://inspirehep.net/record/528281/
+u7nq; http://inspirehep.net/record/1466666
+bl4a; http://inspirehep.net/record/1457602
+9rif; http://inspirehep.net/record/344595
+xuq4; http://inspirehep.net/record/26255
+50uq; http://inspirehep.net/record/424861
+siwf; http://inspirehep.net/record/353517
+aozc; http://inspirehep.net/record/1302816
+0lme; http://inspirehep.net/record/866649
+fhdi; http://inspirehep.net/record/65447
+40vr; http://inspirehep.net/record/667389
+av7m; http://inspirehep.net/record/1428667
+gjtv; http://inspirehep.net/record/278386
+guml; http://inspirehep.net/record/153236
+c1u3; http://inspirehep.net/record/415790
+fjxl; http://inspirehep.net/record/516972
+2gf6; http://inspirehep.net/record/647004
+wdzx; http://inspirehep.net/record/1281073
+0wj6; http://inspirehep.net/record/220935
+ept7; http://inspirehep.net/record/566620
