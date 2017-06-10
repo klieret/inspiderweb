@@ -187,11 +187,11 @@ Misc:
 
 In the following I will always give two lines, the second with the shortcut options, the first one with the longer (and easier to understand options). Instead of ```python3 inspiderweb.py```, you can also use ```python3 inspiderweb.py``` linux (after setting the ```x``` privilege). Note that paths that contain spaces must be enclosed in quotation marks.
 
-Displaying the help:
+Displaying the help: 
 
     python3 inspiderweb.py --help
     python3 inspiderweb.py --h
-    
+      
 Printing statistics about our database (will always be printed if we run the program). It will only be created, so it will look pretty bleak. Of course you can supply your own name for the database, here it's ```test.pickle``` (in the ```db``` folder).
 
     python3 inspiderweb.py --database db/test.pickle
@@ -212,8 +212,8 @@ Output:
 
 Add a few seeds (the ids of inspirehep, i.e. the number ```811388``` from ```http://inspirehep.net/record/811388/```) and download the bibinfo and the references. For this we use the example file in ```seeds/example_small.txt```.
 
-    python3 inspiderweb.py --database db/test.pickle --recidpaths seeds/example_small.txt --get seed.citesrefs
-    python3 inspiderweb.py -d db/test.pickle -r seeds/example_small.txt g s.cr
+    python3 inspiderweb.py --database db/test.pickle --recidpaths seeds/example_small.txt --get seeds.citesrefs
+    python3 inspiderweb.py -d db/test.pickle -r seeds/example_small.txt -g s.cr
    
 This can take some time (around a minute, mainly because the script waits quite often to not overload the inspirehep server), while we see output like: 
 
@@ -283,8 +283,8 @@ This will produce the file ```build/test.dot``` (I chose to place all of the out
 
 Note that we could also have done all of the above with just one command:
 
-    python3 inspiderweb.py --database db/test.pickle --plot --recidpaths seeds/example_small.txt --get bib refs --output build/test.dot
-    python3 inspiderweb.py -d db/test.pickle -p -r seeds/example_small.txt -u bib refs -o build/test.dot
+    python3 inspiderweb.py --database db/test.pickle --plot --recidpaths seeds/example_small.txt --get seeds.refs --output build/test.dot
+    python3 inspiderweb.py -d db/test.pickle -p -r seeds/example_small.txt -g s.r -o build/test.dot
 
 Note that running this should (basically) run straight through, without downloading anything, as all the information was saved in the database: This gives output like
 

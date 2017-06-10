@@ -46,7 +46,7 @@ db.autocomplete_records(args.get, force=args.forceupdate, recids=recids)
 if args.plot:
 
     config = configparser.ConfigParser()
-    config.read("config/default.config")
+    config.read(args.config)
 
     dg = DotGraph(db, config["dotgraph"])
     dg.generate_dot_str(rank=args.rank)

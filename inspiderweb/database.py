@@ -250,8 +250,8 @@ class Database(object):
         elif steps[0] in ['all', 'a']:
             recids = set(self._records.keys())
         else:
-            logger.critical("Wrong syntax: Update string starts "
-                            "with {}. Will abort.".format(steps[0]))
+            logger.critical("Wrong syntax: Get string starts "
+                            "with '{}'. Will abort.".format(steps[0]))
             sys.exit(1)
 
         steps = steps[1:]

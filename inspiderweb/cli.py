@@ -249,6 +249,8 @@ def get_plot_connections(rules: Iterable[str], seeds: Iterable[str],
     Returns: set of two-tuples (from_recid, to_recid) for all connections
              that we are interested in.
     """
+    logger.debug("Getting plot connections for "
+                 "rules {}".format(', '.join(rules)))
     connections = set()
     for recid, record in db._records.items():
         for reference_recid in record.references:
