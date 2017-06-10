@@ -135,7 +135,7 @@ misc_options.add_argument("-c", "--config", required=False, type=str,
                           help="Add config file to specify more "
                                "settings such as the style of the nodes."
                                "Default value is 'config/default.py'. ",
-                          default="config/default.py")
+                          default="config/default.ini")
 # fixme: reimplement
 misc_options.add_argument("--maxseeds", required=False, type=int,
                           help="Maximum number of seeds (for testing "

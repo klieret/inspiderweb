@@ -51,8 +51,8 @@ db.autocomplete_records(args.get, force=args.forceupdate, recids=recids)
 if args.plot:
 
     config = configparser.ConfigParser()
-    config.read(args.config)
-
+    config.read("config/default.config")
+    print(args.config, config, config.sections())
     dg = DotGraph(db, config["dotgraph"])
 
     # ALWAYS END EVERYTHING WITH A SEMICOLON
