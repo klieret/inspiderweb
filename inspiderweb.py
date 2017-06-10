@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from inspiderweb.log import logcontrol
+from inspiderweb.log import logcontrol, logger
+import sys
 from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
 from inspiderweb.recidextractor import get_recid_from_queries, \
@@ -46,6 +47,8 @@ recids.update(get_recids_from_url_paths(args.urlpaths))
 
 db.autocomplete_records(args.get, force=args.forceupdate, recids=recids)
 
+if args.labels:
+    db.get_labels_from_file(args.labels)
 
 if args.plot:
 

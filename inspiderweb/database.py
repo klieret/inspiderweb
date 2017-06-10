@@ -292,8 +292,7 @@ class Database(object):
 
     def get_labels_from_file(self,
                              path: str,
-                             delimiter_char=";",
-                             comment_char="#"):
+                             delimiter_char=";",):
         """ Load labels from csv file. First row is treated as header
         and has to contain "labels", as well as one of "recid", "url",
         "bibkey'.
@@ -330,19 +329,22 @@ class Database(object):
             # todo: maybe rather have a function instead of this
             url_regex = re.compile("inspirehep.net/record/([0-9]+)")
 
-
             for row in csv_file:
                 if not row:
-                    continue
-                if row[0].startswith(comment_char):
                     continue
 
                 label = row["label"].strip()
 
+                if not row[identifier]:
+                    continue
+
                 if identifier == "recid":
                     recid = row[identifier]
                 elif identifier == "url":
-                    recid = url_regex.match(row[identifier]).group(1)
+                    try:
+                        recid = url_regex.search(row[identifier]).group(1)
+                    except AttributeError:
+                        continue
                 elif identifier == "bibkey":
                     recids = self.get_recids_from_bibkeys(
                         row[identifier]).keys()
@@ -351,6 +353,10 @@ class Database(object):
                                      "adding first result.".format(
                             row[identifier]))
                     recid = recids[0]
+                else:
+                    logger.critical("No identifier found in csv header."
+                                    " Abort.")
+                    sys.exit(356)
 
                 record = self.get_record(recid)
                 record.custom_label = label

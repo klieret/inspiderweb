@@ -1,4 +1,4 @@
-# for file in *.pdf; do echo $file | cut -c 1-4; done
+label;url
 # background.bsm
 3no5; 
 # background.ew.fermi

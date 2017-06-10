@@ -141,7 +141,7 @@ misc_options.add_argument("-l", "--labels",
                                "fields will be skipped without an error "
                                "message (which should have the same effect "
                                "in most cases).",
-                          required=False, type=str, nargs=1)
+                          required=False, type=str)
 misc_options.add_argument("-h", "--help",
                           help="Print this help message.", action="help")
 misc_options.add_argument("--rank", required=False,

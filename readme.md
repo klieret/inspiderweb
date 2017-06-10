@@ -7,8 +7,9 @@ InspiderWeb is a tool to analyze networks papers referencing and citing each oth
 
 ## Features
 
+* Supply additional custom labels for each of the nodes. 
 * Clickable nodes which open the paper in inspirehep! For this to work, do not use the ```-Tpdf``` option (as it uses cairo which does not support hyperlinks). Instead do ```dot -Tps2 dotfile.dot > tmp.ps && ps2pdf tmp.ps output.pdf```.  
-* Sort papers by year!
+* Sort/rank papers by year!
 
 ## Screenshots
 
@@ -85,9 +86,9 @@ usage: python3 inspiderweb.py -d DATABASE [DATABASE ...] [-o OUTPUT]
                               [-q QUERIES [QUERIES ...]]
                               [-b BIBKEYPATHS [BIBKEYPATHS ...]]
                               [-u URLPATHS [URLPATHS ...]] [-p [PLOT]]
-                              [-g GET [GET ...]] [-h] [--rank {year}]
-                              [-c CONFIG] [--maxseeds MAXSEEDS]
-                              [--forceupdate]
+                              [-g GET [GET ...]] [-l LABELS] [-h]
+                              [--rank {year}] [-c CONFIG]
+                              [--maxseeds MAXSEEDS] [--forceupdate]
                               [-v--verbosity {debug,info,warning,error,critical}]
 
     INSPIDERWEB
@@ -102,8 +103,7 @@ usage: python3 inspiderweb.py -d DATABASE [DATABASE ...] [-o OUTPUT]
      /       \
 
 Setup/Configure Options:
-  Supply in/output paths. Note that in most cases, seeds are only added to the 
-  database if we perform some action.
+  Supply in/output paths. Note that in most cases, seeds are only added to the database if we perform some action.
 
   -d DATABASE [DATABASE ...], --database DATABASE [DATABASE ...]
                         Pickle database (db) file. Multiple db files are
@@ -173,6 +173,14 @@ Action Options:
 Additional Options:
   Further Configuration...
 
+  -l LABELS, --labels LABELS
+                        Add custom labels from this csv file. The file should
+                        start with a linecontaining the caption 'label' and
+                        one of 'recid', 'url', 'bibkey'.All fields should be
+                        separated by semicolons';'.Note that comments are not
+                        supprted right now, but all lines that do not contain
+                        enough fields will be skipped without an error message
+                        (which should have the same effect in most cases).
   -h, --help            Print this help message.
   --rank {year}         Rank by [year]
   -c CONFIG, --config CONFIG
@@ -184,6 +192,7 @@ Additional Options:
                         Force redownload
   -v--verbosity {debug,info,warning,error,critical}
                         Verbosity
+
 ```
 
 ## Tutorial
