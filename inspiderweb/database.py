@@ -290,44 +290,72 @@ class Database(object):
                                  "now.".format(step))
         return recids
 
-    def load_labels_from_file(self,
-                              path: str,
-                              delimiter_char=";",
-                              comment_char="#",
-                              label_column=0,
-                              id_column=1):
-        """ Load labels from csv file.
+    def get_labels_from_file(self,
+                             path: str,
+                             delimiter_char=";",
+                             comment_char="#"):
+        """ Load labels from csv file. First row is treated as header
+        and has to contain "labels", as well as one of "recid", "url",
+        "bibkey'.
+        Note that comments are not supprted right now, but all lines that
+        do not contain enough fields will be skipped without an error
+        message (which should have the same effect in most cases).
 
         Args:
             path: Path to csv file.
             delimiter_char: Delimiter of csv file [;]
-            comment_char: Ignore lines starting with this [#]
-            label_column: Column with the label [0]
-            id_column: Column with the recid [1]
         """
         logger.info("Loading labels from {}".format(path))
         with open(path, "r") as inspire_links:
-            csv_file = csv.reader(inspire_links, delimiter=delimiter_char)
+            csv_file = csv.DictReader(inspire_links, delimiter=delimiter_char)
+
+            if "label" not in csv_file.fieldnames:
+                logger.critical("No column with 'label' found. Abort. ")
+                sys.exit(83)
+
+            identifier = ""
+            if "recid" in csv_file.fieldnames:
+                identifier = "recid"
+            if "url" in csv_file.fieldnames:
+                if identifier:
+                    logger.error("Multiple identifiers in csv file headers."
+                                 "Gonna take this one.")
+                identifier = "url"
+            if "bibkey" in csv_file.fieldnames:
+                if identifier:
+                    logger.error("Multiple identifiers in csv file headers."
+                                 "Gonna take this one.")
+                identifier = "bibkey"
+
+            # todo: maybe rather have a function instead of this
+            url_regex = re.compile("inspirehep.net/record/([0-9]+)")
+
+
             for row in csv_file:
                 if not row:
                     continue
                 if row[0].startswith(comment_char):
                     continue
-                try:
-                    label = row[label_column].strip()
-                except KeyError:
-                    continue
 
-                try:
-                    recid = re.search("[0-9]+",
-                                      row[id_column].strip()).group(0)
-                except AttributeError or KeyError:
-                    continue
+                label = row["label"].strip()
+
+                if identifier == "recid":
+                    recid = row[identifier]
+                elif identifier == "url":
+                    recid = url_regex.match(row[identifier]).group(1)
+                elif identifier == "bibkey":
+                    recids = self.get_recids_from_bibkeys(
+                        row[identifier]).keys()
+                    if not len(recids) == 1:
+                        logger.error("Something wrong with bibkey {}, just"
+                                     "adding first result.".format(
+                            row[identifier]))
+                    recid = recids[0]
 
                 record = self.get_record(recid)
                 record.custom_label = label
                 self.update_record(recid, record)
-        logger.debug("Finished adding records.")
+        logger.debug("Finished loading labels.")
 
     def get_info(self, recid, force=False) -> bool:
         record = self.get_record(recid)

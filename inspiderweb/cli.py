@@ -129,6 +129,19 @@ action_options.add_argument("-g", "--get", required=False,
                             help=update_help,
                             type=str, default="", nargs="+")
 
+misc_options.add_argument("-l", "--labels",
+                          help="Add custom labels from this csv file. The "
+                               "file should start with a line"
+                               "containing the caption 'label' and one of "
+                               "'recid', 'url', 'bibkey'."
+                               "All fields should be separated by semicolons"
+                               "';'."
+                               "Note that comments are not supprted right "
+                               "now, but all lines that do not contain enough "
+                               "fields will be skipped without an error "
+                               "message (which should have the same effect "
+                               "in most cases).",
+                          required=False, type=str, nargs=1)
 misc_options.add_argument("-h", "--help",
                           help="Print this help message.", action="help")
 misc_options.add_argument("--rank", required=False,
