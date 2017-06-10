@@ -93,7 +93,7 @@ class Database(object):
             sum([int(bool(r.custom_label)) for recid, r in self._records.items()])))
         logger.info("*"*50)
 
-    def load(self, paths, backup_path=True) -> bool:
+    def load(self, paths=None, backup_path=True) -> bool:
         """ Load/merge the database from several path(s).
         The default backup path will always be loaded, unless 
         backup_path=False is set.
@@ -102,7 +102,7 @@ class Database(object):
         written. If no path is given self.backup_path will be used.
 
         Args:
-            paths: Path of databases or Iterable of paths of databases.
+            paths: Path of databases or Iterable of paths of databases or None.
             backup_path: Load from backup path (default true)
         Returns:
             True if any of the loads was successfull.
@@ -110,6 +110,8 @@ class Database(object):
         any_success = False
         if backup_path:
             any_success |= self._load(self.backup_path)
+        if not paths:
+            return any_success
         if "__iter__" not in dir(paths):
             # only one string supplied
             paths = [paths]

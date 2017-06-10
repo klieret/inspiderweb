@@ -96,7 +96,7 @@ class DotGraph(object):
 
             # todo: fix indentation of stuff from config file
             self._dot_str += "{"
-            self._dot_str += self.config["year_node_style"]  + "\n"
+            self._dot_str += self.config["year_node_style"] + "\n"
             self._dot_str += "\t\t" + "->".join(
                 list(sorted(node_ids_by_year.keys(), reverse=True))) + ";\n"
             self._dot_str += "\t}\n"
