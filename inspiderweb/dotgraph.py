@@ -37,6 +37,7 @@ class DotGraph(object):
             to_recid: recid of the record that is being referenced
         """
         self._connections.add((from_recid, to_recid))
+        # print("here")
 
     def add_connections(self, connections: set):
         """ Adds connection between a collection of nodes.
@@ -46,6 +47,7 @@ class DotGraph(object):
         """
         for (from_recid, to_recid) in connections:
             self.add_connection(from_recid, to_recid)
+        # print(self._connections)
 
     def add_cluster(self, recids: set, cluster_id: str, style: str):
         """ Add a cluster.
@@ -137,6 +139,7 @@ class DotGraph(object):
         """ Add the connections to the dot strings.
         """
         for connection in self._connections:
+            # logger.debug("Adding connection")
             self._dot_str += '\t"{}" -> "{}"; \n'.format(connection[0],
                                                          connection[1])
 

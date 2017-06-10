@@ -4,7 +4,7 @@ from inspiderweb.log import logcontrol
 from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
 from inspiderweb.recidextractor import *
-from inspiderweb.cli import cli_parser
+from inspiderweb.cli import cli_parser, get_plot_connections
 import configparser
 
 """ Main file of inspiderweb: Tool to analyze paper reference networks.
@@ -14,6 +14,8 @@ Run this file via `python3 inspiderweb.py --help` for instructions on
 usage. """
 
 args = cli_parser.parse_args()
+
+print(args.plot)
 
 logcontrol.set_verbosity_from_argparse(args.verbosity)
 
@@ -49,6 +51,7 @@ if args.plot:
     config.read(args.config)
 
     dg = DotGraph(db, config["dotgraph"])
+    dg.add_connections(get_plot_connections(args.plot, recids, db))
     dg.generate_dot_str(rank=args.rank)
     dg.write_to_file(args.output)
 

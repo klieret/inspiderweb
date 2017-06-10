@@ -93,9 +93,9 @@ setup_options.add_argument("-u", "--urlpaths", required=False,
 
 plot_help = "Generate dot output (i.e. plot). If you do not specify an " \
             "option, only connections between seeds are plotted (this is the" \
-            "same as specifying 'seeds>seeds' or 's>s'. If you want to " \
+            "same as specifying 'seeds-seeds' or 's-s'. If you want to " \
             "customize this, you can supply several rules of the following " \
-            "form: 'source selection'>'target selection'. The selections" \
+            "form: 'source selection'-'target selection'. The selections" \
             "for source targets are of the form {seeds,all}[.{refs, cites," \
             "refscites}]. Where e.g. seeds.refscites means that all records" \
             "being cited by a seed or citing a seed are valid starting points"\
@@ -106,7 +106,8 @@ plot_help = "Generate dot output (i.e. plot). If you do not specify an " \
 action_options.add_argument("-p", "--plot", required=False,
                             help=plot_help,
                             type=str,
-                            const="seeds>seeds",
+                            action="append",
+                            const="seeds-seeds",
                             nargs="?")
 
 update_help = "Download information. Multiple arguments are supported. " \
@@ -164,9 +165,11 @@ def should_plot_node(recid: str, rule: str, seeds: Iterable[str], db) -> bool:
     if len(steps) == 1:
         if steps[0] in ["all", "a"]:
             if recid not in db._records:
+                # logger.debug("Reject node because not in records")
                 return False
         elif steps[0] in ["seeds", "s"]:
             if recid not in seeds:
+                # logger.debug("Reject node because not in seeds")
                 return False
         else:
             logger.error("Wrong keywords in  }".format(steps[0]))
@@ -209,6 +212,7 @@ def should_plot_node(recid: str, rule: str, seeds: Iterable[str], db) -> bool:
                      "".format(rule))
         sys.exit(60)
 
+    # logger.debug("Node is fine.")
     return True
 
 
@@ -224,14 +228,22 @@ def should_plot_connection(source_recid: str, target_recid: str,
     See the command line arguments for more information. """
     for rule in rules:
         try:
-            source_rule, target_rule = rule.split('>')
-        except ValueError:
-            logger.error("Wrong syntax: {}. Ther should be exactly one "
-                         "'>' in this stringl".format(rule))
+            source_rule, target_rule = rule.split('-')
+            # logger.debug("Rule for source: '{}'; Rule for target: '{}'".format(
+            #     source_rule, target_rule
+            # ))
+        except ValueError as error:
+            logger.error("Wrong syntax: '{}' ({}). There should be exactly one "
+                         "'-' in this stringl".format(rule, error))
+            # have to exit, because else there will be thousands of these
+            # errors.
             sys.exit(58)
-        if db.should_plot_node(source_recid, source_rule, seeds) and \
-                db.should_plot_node(target_recid, target_rule, seeds):
+        if should_plot_node(source_recid, source_rule, seeds, db) and \
+                should_plot_node(target_recid, target_rule, seeds, db):
+            # logger.debug("adding connection.")
             return True
+
+    # logger.debug("Don't plot connection")
     return False
 
 
@@ -254,13 +266,12 @@ def get_plot_connections(rules: Iterable[str], seeds: Iterable[str],
     connections = set()
     for recid, record in db._records.items():
         for reference_recid in record.references:
-            if not should_plot_connection(recid, reference_recid, rules,
+            if should_plot_connection(recid, reference_recid, rules,
                                           seeds, db):
-                continue
-            connections.add((record.recid, reference_recid))
+                connections.add((record.recid, reference_recid))
         for citation_recid in record.citations:
-            if not should_plot_connection(citation_recid, recid, rules,
+            if should_plot_connection(citation_recid, recid, rules,
                                           seeds, db):
-                continue
-            connections.add((citation_recid, record.recid))
+                connections.add((citation_recid, record.recid))
+    # print(connections)
     return connections
