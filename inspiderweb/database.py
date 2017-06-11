@@ -12,6 +12,8 @@ import urllib.parse
 import json
 import collections
 import sys
+from .mock_json import mock_json
+import random
 
 """ Part of inspiderweb: Tool to analyze paper reference networks.
 Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb
@@ -498,6 +500,11 @@ class Database(object):
         """
         if offline_testing is None:
             offline_testing = self.offline_testing
+        if offline_testing:
+            if query in mock_json:
+                return mock_json[query]
+            else:
+                return ""
 
         base_url = "http://inspirehep.net/search?"
         api_string = "p={p}&of={of}&ot={ot}&rg={rg}&jrec={jrec}".format(
