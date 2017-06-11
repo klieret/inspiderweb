@@ -72,9 +72,10 @@ class Database(object):
     recid: record, where record is a Record object and recid is the inspirehep
     id, i.e. the number 566620 for the record inspirehep.net/record/566620/.
     """
-    def __init__(self, backup_path):
+    def __init__(self, backup_path=None):
         self._records = {}
         self.backup_path = backup_path
+        self.offline_testing = False
 
     def statistics(self):
         """ Print some statistics about the records in the database. """
@@ -108,7 +109,7 @@ class Database(object):
             True if any of the loads was successfull.
         """
         any_success = False
-        if backup_path:
+        if backup_path and self.backup_path:
             any_success |= self._load(self.backup_path)
         if not paths:
             return any_success
@@ -432,7 +433,7 @@ class Database(object):
     #     return True
 
     def get_recids_from_query(self, query: str,
-                              record_group=250) -> set[str]:
+                              record_group=250) -> Set[str]:
         """ Get recids from a query to the inspirehp API. Some bibliographic
         information is also obtained and directly inserted in the database.
 
@@ -477,7 +478,8 @@ class Database(object):
     # todo: maybe move out of class or make explcitly static
     def _get_json_from_query(self, query: str,
                              record_group: int,
-                             record_offset: int):
+                             record_offset: int,
+                             offline_testing=None):
         """ This function gets called from get_recids_from_query. See there
         for the general description.
 
@@ -488,9 +490,15 @@ class Database(object):
                            download, we have to run several consecutive
                            downloads that start with an offset,
                            $record_offset.
+            offline_testing: If True: Return an arbitrary hardcoded json
+                             string (for fast offline testing).
+                             If None: take self.offline_testing instead.
         Returns:
             Json as a string.
         """
+        if offline_testing is None:
+            offline_testing = self.offline_testing
+
         base_url = "http://inspirehep.net/search?"
         api_string = "p={p}&of={of}&ot={ot}&rg={rg}&jrec={jrec}".format(
                       p=urllib.parse.quote_plus(query),  # search query
@@ -502,6 +510,7 @@ class Database(object):
         json_string = download(api_url)
         return json_string
 
+    # todo: split up further for more testing
     def _get_recids_from_json(self, json_string) -> List[str]:
         """ Parse the data (as json string) from the inspirehep API
 
