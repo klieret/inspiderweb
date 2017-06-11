@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-from inspiderweb.log import logcontrol, logger
 import sys
+import configparser
+from inspiderweb.log import logcontrol, logger
 from inspiderweb.database import Database
 from inspiderweb.dotgraph import DotGraph
 from inspiderweb.recidextractor import get_recid_from_queries, \
     get_recids_from_bibkey_paths, get_recids_from_url_paths, \
     get_recids_from_recid_paths
 from inspiderweb.cli import cli_parser, get_plot_connections
-import configparser
 
 """ Main file of inspiderweb: Tool to analyze paper reference networks.
 Currently hosted at: https://github.com/klieret/inspiderweb

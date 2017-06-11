@@ -174,7 +174,7 @@ class Database(object):
             self._records[recid] = Record(recid)
             return self._records[recid]
 
-    def get_recids_from_bibkeys(self, bibkeys: set, offline_only=False):
+    def get_recids_from_bibkeys(self, bibkeys: Iterable[str], offline_only=False):
         """ Try to search for as many bibkeys as possible with one run
         as it speeds up the search in the internal database. """
         # 1. search internally
@@ -190,7 +190,7 @@ class Database(object):
         # 2. search inspire for the remaining
         bibkeys -= set(results.keys())
         for bibkey in bibkeys:
-            recids = self.get_recids_from_search(bibkey)
+            recids = self.get_recids_from_query(bibkey)
             if len(recids) == 1:
                 results[bibkey] = list(recids)[0]
             else:
@@ -202,7 +202,7 @@ class Database(object):
         """ Update record with id $recid with record $record. """
         self._records[recid] = record
 
-    def autocomplete_records(self, updates: Set[str], force=False,
+    def autocomplete_records(self, updates: Iterable[str], force=False,
                              save_every=5, recids=None,
                              statistics_every=5) -> set:
         """ Download information for each record from inspirehep.
@@ -369,7 +369,7 @@ class Database(object):
             logger.debug("Skipping downloading of info.")
             return False
         search_string = "recid:{}".format(record.recid)
-        self.get_recids_from_search(search_string)
+        self.get_recids_from_query(search_string)
         record.info_dl = True
         self.update_record(recid, record)
         return True
@@ -382,7 +382,7 @@ class Database(object):
             logger.debug("Skipping downloading of references.")
             return record.references
         search_string = "citedby:recid:{}".format(record.recid)
-        recids = self.get_recids_from_search(search_string)
+        recids = self.get_recids_from_query(search_string)
         logger.debug("{} is citing {} references.".format(recid, len(recids)))
         record.references.update(recids)
         self.update_record(recid, record)
@@ -391,13 +391,18 @@ class Database(object):
 
     def get_citations(self, recid, force=False) -> set():
         """ Download citations from inspirehep.
+
+        Args:
+            recid: Record ID
+            force: force redownload, even though we found this piece of
+                   information in the
         """
         record = self.get_record(recid)
         if record.citations_dl and not force:
             logger.debug("Skipping downloading of citations.")
             return record.citations
         search_string = "refersto:recid:{}".format(record.recid)
-        recids = self.get_recids_from_search(search_string)
+        recids = self.get_recids_from_query(search_string)
         logger.debug("{} is cited by {} records.".format(recid, len(recids)))
         record.citations.update(recids)
         self.update_record(recid, record)
@@ -418,7 +423,7 @@ class Database(object):
     #         logger.debug("Skipping downloading of citations.")
     #         return False
     #     search_string = "cocitedwith:{}".format(record.recid)
-    #     recids = self.get_recids_from_search(search_string)
+    #     recids = self.get_recids_from_query(search_string)
     #     logger.debug("{} is cocited with {} records.".format(recid,
     #                                                          len(recids)))
     #     record.cocitations.update(recids)
@@ -426,22 +431,36 @@ class Database(object):
     #     record.cocitations_dl = True
     #     return True
 
-    def get_recids_from_search(self, searchstring: str,
-                               record_group=250) -> set:
+    def get_recids_from_query(self, query: str,
+                              record_group=250) -> set[str]:
+        """ Get recids from a query to the inspirehp API. Some bibliographic
+        information is also obtained and directly inserted in the database.
+
+        Args:
+            query: Query string (mostly exactly what you would enter in the
+                   inspirhep web form, but without 'find')
+            record_group: How many records should be retrieved with one
+                          download. Default is 25 (as in the 25 results per
+                          page in the web interface), maximum is 250.
+                          Since we do not download to much information per
+                          record, it is probably best to set it to the
+                          maximum.
+        Returns: Set of recids.
+        """
         # Long responses are split into chunks of $record_group records
         # so we need an additional loop.
         record_offset = 0
         recids = []
         while True:
-            new_recids = self.get_recids_from_search_chunk(
-                searchstring, record_group, record_offset)
+            new_recids = self._get_recids_from_json(
+                self._get_json_from_query(query, record_group, record_offset))
             recids.extend(new_recids)
             # print("recids from rg", record_offset, new_recids)
             if len(new_recids) < record_group:
                 break
             record_offset += record_group - 1
         # print(recids)
-        recids = map(str, recids)  # fixme: shouldn't need that actually....
+        # recids = map(str, recids)
         recids_unique = set(recids)
         # somehow this is being flagged in pycharm, but seems to be correct
         # and runs without an error.
@@ -455,24 +474,48 @@ class Database(object):
             logger.debug("No duplicates.")
         return recids_unique
 
-    def get_recids_from_search_chunk(self, searchstring: str,
-                                     record_group: int,
-                                     record_offset: int) -> List:
-        """ Returns a list of the recids of all results found, while updating
-        the db with pieces of information found on the way.
+    # todo: maybe move out of class or make explcitly static
+    def _get_json_from_query(self, query: str,
+                             record_group: int,
+                             record_offset: int):
+        """ This function gets called from get_recids_from_query. See there
+        for the general description.
+
+        Args:
+            query: See get_recids_from_query
+            record_group: See get_recids_from_query
+            record_offset: Since we retrieve $record_group many results per
+                           download, we have to run several consecutive
+                           downloads that start with an offset,
+                           $record_offset.
+        Returns:
+            Json as a string.
         """
         base_url = "http://inspirehep.net/search?"
         api_string = "p={p}&of={of}&ot={ot}&rg={rg}&jrec={jrec}".format(
-                      p=urllib.parse.quote_plus(searchstring),  # search query
+                      p=urllib.parse.quote_plus(query),  # search query
                       of="recjson",  # output format
                       ot="recid,system_control_number",  # output tags
                       rg=record_group,  # number of records (def: 25, max: 250)
                       jrec=record_offset)  # result offset
         api_url = base_url + api_string
-        result = download(api_url)
-        if not result:
+        json_string = download(api_url)
+        return json_string
+
+    def _get_recids_from_json(self, json_string) -> List[str]:
+        """ Parse the data (as json string) from the inspirehep API
+
+        Args:
+            json_string: String of json.
+        Returns:
+            List (!) of recids. This is so that we can consider how many
+            duplicates we are retrieving (there shouldn't be any but you
+            never know).
+        """
+
+        if not json_string:
             return []
-        pyob = json.loads(result)
+        pyob = json.loads(json_string)
         if not pyob:
             return []
         recids = []
@@ -485,7 +528,7 @@ class Database(object):
                 # this clearly shouldn't happen, because we requested this
                 # tag
                 logger.error("Key 'system_control_number' not found. This "
-                             "shouldn't happen. "
+                             "shouldn't happen as we asked for it. "
                              "Full string: {}".format(record))
                 continue
 

@@ -178,7 +178,7 @@ def get_recid_from_queries(queries: List[str], db) -> set():
     """
     new_recids = set()
     for query in queries:
-        these_new_recids = db.get_recids_from_search(query)
+        these_new_recids = db.get_recids_from_query(query)
         logger.info("Got {} seeds from search query {}.".format(
             len(these_new_recids), query))
         new_recids.update(these_new_recids)

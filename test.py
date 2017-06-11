@@ -105,13 +105,13 @@ class TestSearchMethods(unittest.TestCase):
         self.db.load()
 
     def test_qearch_query(self):
-        self.assertEqual(self.db.get_recids_from_search("recid:1"), {'1'})
+        self.assertEqual(self.db.get_recids_from_query("recid:1"), {'1'})
         # make sure those aren't likely to change with time
         search_query_result_length = {"a feynman and date < 1990": 76,
                                       "a gell-mann and date < 1990": 123}
         for query, length in search_query_result_length.items():
             with self.subTest(query=query):
-                recids = self.db.get_recids_from_search(query)
+                recids = self.db.get_recids_from_query(query)
                 self.assertEqual(len(recids), length)
 
     def test_bibkey_search(self):
