@@ -349,8 +349,8 @@ class Database(object):
                     except AttributeError:
                         continue
                 elif identifier == "bibkey":
-                    recids = self.get_recids_from_bibkeys(
-                        row[identifier]).keys()
+                    recids = list(self.get_recids_from_bibkeys(
+                        row[identifier]).keys())
                     if not len(recids) == 1:
                         logger.error("Something wrong with bibkey {}, just"
                                      "adding first result.".format(
