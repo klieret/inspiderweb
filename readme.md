@@ -40,7 +40,7 @@ Starting from some initial records ("seeds"), inspiderweb uses the inspirehep AP
 ## Limitations/Bugs
 
 * I didn't do too many tests and there's maybe more todo notes in the code than features itself, so don't expect everything to work right away!
-* Downloading the references/citations of a large number of papers will take its time. The script waits a few seconds after each download as to not strain the inspirehep capacities, so just let in run in the background for a couple of hours and it should be done. As a rough estimate, it's one download per 25 references/citations per paper, so about 4s per 25 references per paper. 
+* Downloading the references/citations of a large number of papers will take its time. The script waits a few seconds after each download as to not strain the inspirehep capacities, so just let in run in the background for a couple of minutes and it should be done. 
 * Right now all the downloaded information is saved as a python3 [pickle](https://docs.python.org/2/library/pickle.html) of ```Record``` objects. This clearly is the easiest choice, but definitely not the best one for bigger database scales. If anyone wants to implement this more elegantly or provide export possibilities to other database format, this is very welcome.
 
 
