@@ -1,9 +1,17 @@
-# InspiderWeb [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=master)](https://travis-ci.org/klieret/inspiderweb)
+# InspiderWeb
 [Features](#features) | [Screenshots](#screenshots) | [How does it work?](#how-does-it-work) | [Limitations/Bugs](#limitationsbugs) | [Installation](#installation) | [Usage](#usage) | [Tutorial](#tutorial) | [Usage Examples](#examples-usage) | [License](#license)
 
 InspiderWeb is a tool to analyze networks papers referencing and citing each other. It gets its information from the [inspirehep](http://inspirehep.net/) API, then uses the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) to describe the network. The result can then be plotted by the [Graphviz Package](http://www.graphviz.org/) and similar programs.
 
-**Note: This Script was using webcraling & regex-html parsing (yes, that's evil) to extract information from inspiderweb and just recently switched to using the API. If something doesn't work, check out the ```webcrawling_legacy``` branch.**
+
+
+| Branch | Description | Travis |
+| -------| ----------- | ------ |
+| [master](https://github.com/klieret/inspiderweb/tree/master) | (Hopefully) stable release | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=master)](https://travis-ci.org/klieret/inspiderweb)
+| [development](https://github.com/klieret/inspiderweb/tree/development)| Work on new features in progress. Might be completely broken from time to time. | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=development)](https://travis-ci.org/klieret/inspiderweb)
+| [hotfixes](https://github.com/klieret/inspiderweb/tree/hotfixes) | Fixes that are then merged into most other branches | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=hotfixes)](https://travis-ci.org/klieret/inspiderweb)
+| [webcrawling_legacy](https://github.com/klieret/inspiderweb/tree/webcrawling_legacy) | Legacy code that still uses webcrawling | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=webcrawling_legacy)](https://travis-ci.org/klieret/inspiderweb)
+
 
 ## Features
 
@@ -353,15 +361,6 @@ See the tutorial for how to plot the dotfile.
 * I want to get the relations between all of the papers I authored:
 
         python3 inspiderweb.py -d db/<db name>.pickle -q "a <authorname>" -g seeds.refs -p -o build/<output name>.dot     
-
-## Development notes
-
-There are the following branches
-
-* ```master```: Stable release
-* ```development```: Work on new features in progress. Might be completely broken from time to time
-* ```hotfixes```: Fixes that are then merged to both ```master``` and ```development```.
-* ```webcrawling_legacy```: Legacy code that still uses webcrawling.
 
 ## License
 
