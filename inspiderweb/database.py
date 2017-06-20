@@ -13,7 +13,6 @@ import json
 import collections
 import sys
 from .mock_json import mock_json
-import random
 
 """ Part of inspiderweb: Tool to analyze paper reference networks.
 Inspiderweb currently hosted at: https://github.com/klieret/inspiderweb

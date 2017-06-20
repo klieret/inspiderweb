@@ -48,6 +48,7 @@ class TestDatabase(unittest.TestCase):
         # note: sometimes this is not exactly the same on the /references
         # page, as we only get those for papers which are registered
         # on inspirehep.
+        # we test with ">=", since this can still change
         self.expected_recid_references = {"0699123": 21,
                                           "460528": 0,
                                           "1514038": 119,
@@ -81,17 +82,16 @@ class TestDatabase(unittest.TestCase):
 
         self.db.get_references(recid)
 
-        self.assertEqual(len(record.references), expected_references)
+        self.assertGreaterEqual(len(record.references), expected_references)
         self.assertTrue(record.references_dl)
 
     def _test_get_citations(self, recid, expected_citations):
         record = self.db.get_record(recid)
         self.assertFalse(record.citations_dl)
-        self.assertEqual(len(record.citations), 0)
 
         self.db.get_citations(recid)
 
-        self.assertEqual(len(record.citations), expected_citations)
+        self.assertGreaterEqual(len(record.citations), expected_citations)
         self.assertTrue(record.citations_dl)
 
 
