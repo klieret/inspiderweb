@@ -4,8 +4,7 @@ python:
   - "3.5"
 install:
   - "pip install -r requirements.txt"
-  - graphviz
 script:
   - "python3 -m unittest discover -v"
-  - "grep \"    python3 inspiderweb.py\" readme.md > test_tutorial.sh"
+  - "python3 test_tutorial_gen.py"
   - "sh test_tutorial.sh"
