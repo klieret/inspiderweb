@@ -56,8 +56,6 @@ class Record(object):
         if not self.fulltext_url:
             self.fulltext_url = other.fulltext_url
 
-    # fixme: Rather separate that from self._label so that we can combine ...
-    # bibkey and label
     @property
     def label(self):
         if self.bibkey:
