@@ -1,5 +1,5 @@
 # InspiderWeb
-[Features](#features) | [Screenshots](#screenshots) | [How does it work?](#how-does-it-work) | [Limitations/Bugs](#limitationsbugs) | [Installation](#installation) | [Usage](#usage) | [Tutorial](#tutorial) | [Usage Examples](#examples-usage) | [License](#license)
+[Features](#features) | [Screenshots](#screenshots) | [How does it work?](#how-does-it-work) | [Limitations/Bugs](#limitationsbugs) | [Installation](#installation) | [Usage](#usage) | [Tutorial](#tutorial) | [Usage Examples](#usage-examples) | [License](#license)
 
 InspiderWeb is a tool to analyze networks papers referencing and citing each other. It gets its information from the [inspirehep](http://inspirehep.net/) API, then uses the [dot language](https://en.wikipedia.org/wiki/DOT_(graph_description_language)) to describe the network. The result can then be plotted by the [Graphviz Package](http://www.graphviz.org/) and similar programs.
 
