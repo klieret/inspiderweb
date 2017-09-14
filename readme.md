@@ -6,11 +6,11 @@ InspiderWeb is a tool to analyze networks papers referencing and citing each oth
 
 
 | Branch | Description | Travis |
-| -------| ----------- | ------ |
-| [master](https://github.com/klieret/inspiderweb/tree/master) | (Hopefully) stable release | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=master)](https://travis-ci.org/klieret/inspiderweb)
-| [development](https://github.com/klieret/inspiderweb/tree/development)| Work on new features in progress. Might be completely broken from time to time. | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=development)](https://travis-ci.org/klieret/inspiderweb)
-| [hotfixes](https://github.com/klieret/inspiderweb/tree/hotfixes) | Fixes that are then merged into most other branches | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=hotfixes)](https://travis-ci.org/klieret/inspiderweb)
-| [webcrawling_legacy](https://github.com/klieret/inspiderweb/tree/webcrawling_legacy) | Legacy code that still uses webcrawling | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=webcrawling_legacy)](https://travis-ci.org/klieret/inspiderweb)
+| -------| ----------- | ------ | 
+| [master](https://github.com/klieret/inspiderweb/tree/master) | (Hopefully) stable release | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=master)](https://travis-ci.org/klieret/inspiderweb) | 
+| [development](https://github.com/klieret/inspiderweb/tree/development)| Work on new features in progress. Might be completely broken from time to time. | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=development)](https://travis-ci.org/klieret/inspiderweb) | 
+| [hotfixes](https://github.com/klieret/inspiderweb/tree/hotfixes) | Fixes that are then merged into most other branches | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=hotfixes)](https://travis-ci.org/klieret/inspiderweb) | 
+| [webcrawling_legacy](https://github.com/klieret/inspiderweb/tree/webcrawling_legacy) | Legacy code that still uses webcrawling | [![Build Status](https://travis-ci.org/klieret/inspiderweb.svg?branch=webcrawling_legacy)](https://travis-ci.org/klieret/inspiderweb) | 
 
 
 ## Features
