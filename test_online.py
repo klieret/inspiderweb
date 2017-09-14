@@ -112,7 +112,8 @@ class TestSearchMethods(unittest.TestCase):
         for query, length in search_query_result_length.items():
             with self.subTest(query=query):
                 recids = self.db.get_recids_from_query(query)
-                self.assertEqual(len(recids), length)
+                # GreaterEqual because we can get more citations with time...
+                self.assertGreaterEqual(len(recids), length)
 
     def test_bibkey_search(self):
         recid = "1"
